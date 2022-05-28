@@ -11,7 +11,6 @@ import Css
 import Css.Global
 import Html.Styled exposing (..)
 import Html.Styled.Attributes as Attr
-import Tailwind.Breakpoints as Breakpoints
 import Tailwind.Utilities as Tw
 
 
@@ -32,8 +31,17 @@ main =
 -- MODEL
 
 
+type alias Cell =
+    -- four bool fields to represent whether that connection is active or not
+    { connections : List Bool, rotations : Int }
+
+
+type alias Row =
+    List Cell
+
+
 type alias Grid =
-    List (List String)
+    List Row
 
 
 type alias Model =
@@ -42,7 +50,20 @@ type alias Model =
 
 init : Model
 init =
-    { grid = [ [ "-", "-" ], [ "|", "|" ] ] }
+    let
+        a =
+            [ { connections = [ True, True, False, False ], rotations = 0 } ]
+
+        b =
+            [ { connections = [ True, True, False, False ], rotations = 0 } ]
+
+        c =
+            [ { connections = [ True, True, False, False ], rotations = 0 } ]
+
+        d =
+            [ { connections = [ True, True, False, False ], rotations = 0 } ]
+    in
+    { grid = [ a, b, c, d ] }
 
 
 
@@ -69,50 +90,43 @@ view { grid } =
     div [ Attr.css [ Tw.bg_gray_50, Tw.rounded_t_xl, Tw.p_24 ] ]
         [ -- This will give us the standard tailwind style-reset as well as the fonts
           Css.Global.global Tw.globalStyles
-        , div
-            [ Attr.css [ Tw.bg_blue_100, Tw.grid, Tw.grid_cols_2, Tw.w_24 ] ]
-            (List.map
-                (\row ->
-                    div []
-                        (List.map
-                            (\rowValue ->
-                                div
-                                    [ Attr.css [ Tw.bg_blue_500, Tw.rounded_sm, Tw.w_12, Tw.h_12, Tw.text_center ] ]
-                                    [ text rowValue ]
-                            )
-                            row
-                        )
-                )
-                grid
-            )
-        , div []
-            [ a
-                [ Attr.css
-                    [ Tw.inline_flex
-                    , Tw.items_center
-                    , Tw.justify_center
-                    , Tw.px_5
-                    , Tw.py_3
-                    , Tw.border
-                    , Tw.border_transparent
-                    , Tw.text_base
-                    , Tw.font_medium
-                    , Tw.rounded_md
-                    , Tw.text_white
-                    , Tw.bg_indigo_600
-
-                    -- We can use hover styles via elm-css :)
-                    , Css.hover [ Tw.bg_indigo_700 ]
-                    ]
-                , Attr.href "#"
-                ]
-                [ text "Get started" ]
-            ]
+        , viewBoard grid
         ]
 
 
+viewBoard : Grid -> Html msg
+viewBoard grid =
+    div
+        [ Attr.css [ Tw.bg_blue_100, Tw.grid, Tw.grid_cols_2, Tw.w_24 ] ]
+        (List.map
+            (\row ->
+                div []
+                    (List.map
+                        (\cell ->
+                            viewCell cell
+                        )
+                        row
+                    )
+            )
+            grid
+        )
 
--- viewBoard : Grid -> Html msg
--- viewBoard grid =
---   div [] [
---   ]
+
+viewCell : Cell -> Html msg
+viewCell { connections, rotations } =
+    case connections of
+        [ False, False, False, False ] ->
+            cellDiv
+
+        [ True, False, False, False ] ->
+            "l"
+
+        _ ->
+            " "
+
+
+cellDiv : Html msg
+cellDiv =
+    div
+        [ Attr.css [ Tw.bg_blue_500, Tw.rounded_sm, Tw.w_12, Tw.h_12, Tw.text_center ] ]
+        [ text (showCell cell) ]

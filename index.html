@@ -4491,15 +4491,46 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
-var $author$project$Main$init = {
-	grid: _List_fromArray(
+var $elm$core$Basics$False = {$: 'False'};
+var $elm$core$Basics$True = {$: 'True'};
+var $author$project$Main$init = function () {
+	var d = _List_fromArray(
 		[
-			_List_fromArray(
-			['-', '-']),
-			_List_fromArray(
-			['|', '|'])
-		])
-};
+			{
+			connections: _List_fromArray(
+				[true, true, false, false]),
+			rotations: 0
+		}
+		]);
+	var c = _List_fromArray(
+		[
+			{
+			connections: _List_fromArray(
+				[true, true, false, false]),
+			rotations: 0
+		}
+		]);
+	var b = _List_fromArray(
+		[
+			{
+			connections: _List_fromArray(
+				[true, true, false, false]),
+			rotations: 0
+		}
+		]);
+	var a = _List_fromArray(
+		[
+			{
+			connections: _List_fromArray(
+				[true, true, false, false]),
+			rotations: 0
+		}
+		]);
+	return {
+		grid: _List_fromArray(
+			[a, b, c, d])
+	};
+}();
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -4521,7 +4552,6 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
-var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
@@ -4887,7 +4917,6 @@ var $elm$core$Array$initialize = F2(
 			return A5($elm$core$Array$initializeHelp, fn, initialFromIndex, len, _List_Nil, tail);
 		}
 	});
-var $elm$core$Basics$True = {$: 'True'};
 var $elm$core$Result$isOk = function (result) {
 	if (result.$ === 'Ok') {
 		return true;
@@ -7566,13 +7595,6 @@ var $author$project$Main$update = F2(
 		var grid = _v0.grid;
 		return {grid: grid};
 	});
-var $rtfeldman$elm_css$VirtualDom$Styled$Node = F3(
-	function (a, b, c) {
-		return {$: 'Node', a: a, b: b, c: c};
-	});
-var $rtfeldman$elm_css$VirtualDom$Styled$node = $rtfeldman$elm_css$VirtualDom$Styled$Node;
-var $rtfeldman$elm_css$Html$Styled$node = $rtfeldman$elm_css$VirtualDom$Styled$node;
-var $rtfeldman$elm_css$Html$Styled$a = $rtfeldman$elm_css$Html$Styled$node('a');
 var $rtfeldman$elm_css$Css$Preprocess$ApplyStyles = function (a) {
 	return {$: 'ApplyStyles', a: a};
 };
@@ -7584,38 +7606,12 @@ var $rtfeldman$elm_css$Css$property = F2(
 	function (key, value) {
 		return $rtfeldman$elm_css$Css$Preprocess$AppendProperty(key + (':' + value));
 	});
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_blue_100 = $rtfeldman$elm_css$Css$batch(
-	_List_fromArray(
-		[
-			A2($rtfeldman$elm_css$Css$property, '--tw-bg-opacity', '1'),
-			A2($rtfeldman$elm_css$Css$property, 'background-color', 'rgba(219, 234, 254, var(--tw-bg-opacity))')
-		]));
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_blue_500 = $rtfeldman$elm_css$Css$batch(
-	_List_fromArray(
-		[
-			A2($rtfeldman$elm_css$Css$property, '--tw-bg-opacity', '1'),
-			A2($rtfeldman$elm_css$Css$property, 'background-color', 'rgba(59, 130, 246, var(--tw-bg-opacity))')
-		]));
 var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_gray_50 = $rtfeldman$elm_css$Css$batch(
 	_List_fromArray(
 		[
 			A2($rtfeldman$elm_css$Css$property, '--tw-bg-opacity', '1'),
 			A2($rtfeldman$elm_css$Css$property, 'background-color', 'rgba(249, 250, 251, var(--tw-bg-opacity))')
 		]));
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_indigo_600 = $rtfeldman$elm_css$Css$batch(
-	_List_fromArray(
-		[
-			A2($rtfeldman$elm_css$Css$property, '--tw-bg-opacity', '1'),
-			A2($rtfeldman$elm_css$Css$property, 'background-color', 'rgba(79, 70, 229, var(--tw-bg-opacity))')
-		]));
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_indigo_700 = $rtfeldman$elm_css$Css$batch(
-	_List_fromArray(
-		[
-			A2($rtfeldman$elm_css$Css$property, '--tw-bg-opacity', '1'),
-			A2($rtfeldman$elm_css$Css$property, 'background-color', 'rgba(67, 56, 202, var(--tw-bg-opacity))')
-		]));
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$border = A2($rtfeldman$elm_css$Css$property, 'border-width', '1px');
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$border_transparent = A2($rtfeldman$elm_css$Css$property, 'border-color', 'transparent');
 var $rtfeldman$elm_css$VirtualDom$Styled$Attribute = F3(
 	function (a, b, c) {
 		return {$: 'Attribute', a: a, b: b, c: c};
@@ -7655,8 +7651,13 @@ var $rtfeldman$elm_css$Html$Styled$Internal$css = function (styles) {
 	return A3($rtfeldman$elm_css$VirtualDom$Styled$Attribute, classProperty, styles, classname);
 };
 var $rtfeldman$elm_css$Html$Styled$Attributes$css = $rtfeldman$elm_css$Html$Styled$Internal$css;
+var $rtfeldman$elm_css$VirtualDom$Styled$Node = F3(
+	function (a, b, c) {
+		return {$: 'Node', a: a, b: b, c: c};
+	});
+var $rtfeldman$elm_css$VirtualDom$Styled$node = $rtfeldman$elm_css$VirtualDom$Styled$Node;
+var $rtfeldman$elm_css$Html$Styled$node = $rtfeldman$elm_css$VirtualDom$Styled$node;
 var $rtfeldman$elm_css$Html$Styled$div = $rtfeldman$elm_css$Html$Styled$node('div');
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$font_medium = A2($rtfeldman$elm_css$Css$property, 'font-weight', '500');
 var $rtfeldman$elm_css$VirtualDom$Styled$Unstyled = function (a) {
 	return {$: 'Unstyled', a: a};
 };
@@ -8085,83 +8086,107 @@ var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$globalStyles = _L
 				A2($rtfeldman$elm_css$Css$property, '--tw-ring-shadow', '0 0 #0000')
 			]))
 	]);
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$grid = A2($rtfeldman$elm_css$Css$property, 'display', 'grid');
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$grid_cols_2 = A2($rtfeldman$elm_css$Css$property, 'grid-template-columns', 'repeat(2, minmax(0, 1fr))');
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$h_12 = A2($rtfeldman$elm_css$Css$property, 'height', '3rem');
-var $rtfeldman$elm_css$Css$Preprocess$ExtendSelector = F2(
-	function (a, b) {
-		return {$: 'ExtendSelector', a: a, b: b};
-	});
-var $rtfeldman$elm_css$Css$Structure$PseudoClassSelector = function (a) {
-	return {$: 'PseudoClassSelector', a: a};
-};
-var $rtfeldman$elm_css$Css$pseudoClass = function (_class) {
-	return $rtfeldman$elm_css$Css$Preprocess$ExtendSelector(
-		$rtfeldman$elm_css$Css$Structure$PseudoClassSelector(_class));
-};
-var $rtfeldman$elm_css$Css$hover = $rtfeldman$elm_css$Css$pseudoClass('hover');
-var $rtfeldman$elm_css$VirtualDom$Styled$property = F2(
-	function (key, value) {
-		return A3(
-			$rtfeldman$elm_css$VirtualDom$Styled$Attribute,
-			A2($elm$virtual_dom$VirtualDom$property, key, value),
-			_List_Nil,
-			'');
-	});
-var $rtfeldman$elm_css$Html$Styled$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			$rtfeldman$elm_css$VirtualDom$Styled$property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $rtfeldman$elm_css$Html$Styled$Attributes$href = function (url) {
-	return A2($rtfeldman$elm_css$Html$Styled$Attributes$stringProperty, 'href', url);
-};
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$inline_flex = A2($rtfeldman$elm_css$Css$property, 'display', 'inline-flex');
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$items_center = A2($rtfeldman$elm_css$Css$property, 'align-items', 'center');
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$justify_center = A2($rtfeldman$elm_css$Css$property, 'justify-content', 'center');
 var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$p_24 = A2($rtfeldman$elm_css$Css$property, 'padding', '6rem');
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$px_5 = $rtfeldman$elm_css$Css$batch(
-	_List_fromArray(
-		[
-			A2($rtfeldman$elm_css$Css$property, 'padding-left', '1.25rem'),
-			A2($rtfeldman$elm_css$Css$property, 'padding-right', '1.25rem')
-		]));
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$py_3 = $rtfeldman$elm_css$Css$batch(
-	_List_fromArray(
-		[
-			A2($rtfeldman$elm_css$Css$property, 'padding-top', '0.75rem'),
-			A2($rtfeldman$elm_css$Css$property, 'padding-bottom', '0.75rem')
-		]));
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$rounded_md = A2($rtfeldman$elm_css$Css$property, 'border-radius', '0.375rem');
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$rounded_sm = A2($rtfeldman$elm_css$Css$property, 'border-radius', '0.125rem');
 var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$rounded_t_xl = $rtfeldman$elm_css$Css$batch(
 	_List_fromArray(
 		[
 			A2($rtfeldman$elm_css$Css$property, 'border-top-left-radius', '0.75rem'),
 			A2($rtfeldman$elm_css$Css$property, 'border-top-right-radius', '0.75rem')
 		]));
+var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_blue_100 = $rtfeldman$elm_css$Css$batch(
+	_List_fromArray(
+		[
+			A2($rtfeldman$elm_css$Css$property, '--tw-bg-opacity', '1'),
+			A2($rtfeldman$elm_css$Css$property, 'background-color', 'rgba(219, 234, 254, var(--tw-bg-opacity))')
+		]));
+var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$grid = A2($rtfeldman$elm_css$Css$property, 'display', 'grid');
+var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$grid_cols_2 = A2($rtfeldman$elm_css$Css$property, 'grid-template-columns', 'repeat(2, minmax(0, 1fr))');
+var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_blue_500 = $rtfeldman$elm_css$Css$batch(
+	_List_fromArray(
+		[
+			A2($rtfeldman$elm_css$Css$property, '--tw-bg-opacity', '1'),
+			A2($rtfeldman$elm_css$Css$property, 'background-color', 'rgba(59, 130, 246, var(--tw-bg-opacity))')
+		]));
+var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$h_12 = A2($rtfeldman$elm_css$Css$property, 'height', '3rem');
+var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$rounded_sm = A2($rtfeldman$elm_css$Css$property, 'border-radius', '0.125rem');
+var $author$project$Main$showCell = function (_v0) {
+	var connections = _v0.connections;
+	var rotations = _v0.rotations;
+	_v1$2:
+	while (true) {
+		if (connections.b) {
+			if (!connections.a) {
+				if ((((((connections.b.b && (!connections.b.a)) && connections.b.b.b) && (!connections.b.b.a)) && connections.b.b.b.b) && (!connections.b.b.b.a)) && (!connections.b.b.b.b.b)) {
+					var _v2 = connections.b;
+					var _v3 = _v2.b;
+					var _v4 = _v3.b;
+					return ' ';
+				} else {
+					break _v1$2;
+				}
+			} else {
+				if ((((((connections.b.b && connections.b.a) && connections.b.b.b) && (!connections.b.b.a)) && connections.b.b.b.b) && (!connections.b.b.b.a)) && (!connections.b.b.b.b.b)) {
+					var _v5 = connections.b;
+					var _v6 = _v5.b;
+					var _v7 = _v6.b;
+					return 'l';
+				} else {
+					break _v1$2;
+				}
+			}
+		} else {
+			break _v1$2;
+		}
+	}
+	return ' ';
+};
 var $rtfeldman$elm_css$VirtualDom$Styled$text = function (str) {
 	return $rtfeldman$elm_css$VirtualDom$Styled$Unstyled(
 		$elm$virtual_dom$VirtualDom$text(str));
 };
 var $rtfeldman$elm_css$Html$Styled$text = $rtfeldman$elm_css$VirtualDom$Styled$text;
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$text_base = $rtfeldman$elm_css$Css$batch(
-	_List_fromArray(
-		[
-			A2($rtfeldman$elm_css$Css$property, 'font-size', '1rem'),
-			A2($rtfeldman$elm_css$Css$property, 'line-height', '1.5rem')
-		]));
 var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$text_center = A2($rtfeldman$elm_css$Css$property, 'text-align', 'center');
-var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$text_white = $rtfeldman$elm_css$Css$batch(
-	_List_fromArray(
-		[
-			A2($rtfeldman$elm_css$Css$property, '--tw-text-opacity', '1'),
-			A2($rtfeldman$elm_css$Css$property, 'color', 'rgba(255, 255, 255, var(--tw-text-opacity))')
-		]));
 var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$w_12 = A2($rtfeldman$elm_css$Css$property, 'width', '3rem');
+var $author$project$Main$viewCell = function (cell) {
+	return A2(
+		$rtfeldman$elm_css$Html$Styled$div,
+		_List_fromArray(
+			[
+				$rtfeldman$elm_css$Html$Styled$Attributes$css(
+				_List_fromArray(
+					[$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_blue_500, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$rounded_sm, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$w_12, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$h_12, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$text_center]))
+			]),
+		_List_fromArray(
+			[
+				$rtfeldman$elm_css$Html$Styled$text(
+				$author$project$Main$showCell(cell))
+			]));
+};
 var $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$w_24 = A2($rtfeldman$elm_css$Css$property, 'width', '6rem');
+var $author$project$Main$viewBoard = function (grid) {
+	return A2(
+		$rtfeldman$elm_css$Html$Styled$div,
+		_List_fromArray(
+			[
+				$rtfeldman$elm_css$Html$Styled$Attributes$css(
+				_List_fromArray(
+					[$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_blue_100, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$grid, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$grid_cols_2, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$w_24]))
+			]),
+		A2(
+			$elm$core$List$map,
+			function (row) {
+				return A2(
+					$rtfeldman$elm_css$Html$Styled$div,
+					_List_Nil,
+					A2(
+						$elm$core$List$map,
+						function (cell) {
+							return $author$project$Main$viewCell(cell);
+						},
+						row));
+			},
+			grid));
+};
 var $author$project$Main$view = function (_v0) {
 	var grid = _v0.grid;
 	return A2(
@@ -8175,74 +8200,7 @@ var $author$project$Main$view = function (_v0) {
 		_List_fromArray(
 			[
 				$rtfeldman$elm_css$Css$Global$global($matheus23$elm_default_tailwind_modules$Tailwind$Utilities$globalStyles),
-				A2(
-				$rtfeldman$elm_css$Html$Styled$div,
-				_List_fromArray(
-					[
-						$rtfeldman$elm_css$Html$Styled$Attributes$css(
-						_List_fromArray(
-							[$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_blue_100, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$grid, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$grid_cols_2, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$w_24]))
-					]),
-				A2(
-					$elm$core$List$map,
-					function (row) {
-						return A2(
-							$rtfeldman$elm_css$Html$Styled$div,
-							_List_Nil,
-							A2(
-								$elm$core$List$map,
-								function (rowValue) {
-									return A2(
-										$rtfeldman$elm_css$Html$Styled$div,
-										_List_fromArray(
-											[
-												$rtfeldman$elm_css$Html$Styled$Attributes$css(
-												_List_fromArray(
-													[$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_blue_500, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$rounded_sm, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$w_12, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$h_12, $matheus23$elm_default_tailwind_modules$Tailwind$Utilities$text_center]))
-											]),
-										_List_fromArray(
-											[
-												$rtfeldman$elm_css$Html$Styled$text(rowValue)
-											]));
-								},
-								row));
-					},
-					grid)),
-				A2(
-				$rtfeldman$elm_css$Html$Styled$div,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$rtfeldman$elm_css$Html$Styled$a,
-						_List_fromArray(
-							[
-								$rtfeldman$elm_css$Html$Styled$Attributes$css(
-								_List_fromArray(
-									[
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$inline_flex,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$items_center,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$justify_center,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$px_5,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$py_3,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$border,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$border_transparent,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$text_base,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$font_medium,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$rounded_md,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$text_white,
-										$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_indigo_600,
-										$rtfeldman$elm_css$Css$hover(
-										_List_fromArray(
-											[$matheus23$elm_default_tailwind_modules$Tailwind$Utilities$bg_indigo_700]))
-									])),
-								$rtfeldman$elm_css$Html$Styled$Attributes$href('#')
-							]),
-						_List_fromArray(
-							[
-								$rtfeldman$elm_css$Html$Styled$text('Get started')
-							]))
-					]))
+				$author$project$Main$viewBoard(grid)
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
