@@ -30,13 +30,13 @@ initGameState =
             { shape = Knob, rotations = 0 }
 
         b =
-            { shape = Elbow, rotations = 1 }
+            { shape = Bar, rotations = 0 }
 
         c =
-            { shape = Knob, rotations = 0 }
+            { shape = Elbow, rotations = 0 }
 
         d =
-            { shape = Elbow, rotations = 2 }
+            { shape = Tee, rotations = 0 }
     in
     Dict.fromList
         [ ( ( 0, 0 ), a )

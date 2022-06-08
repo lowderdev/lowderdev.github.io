@@ -8,7 +8,8 @@ import Element.Border as Border
 import Element.Events as Events
 import Html exposing (Html)
 import Maybe exposing (andThen, withDefault)
-import Model exposing (Cell, Coords, Model, Shape(..), initGameState, emptyCell)
+import Model exposing (Cell, Coords, Model, Shape(..), emptyCell, initGameState)
+import TileSvg exposing (barSvg, elbowSvg, knobSvg, teeSvg)
 
 
 main : Program () Model Msg
@@ -80,43 +81,7 @@ boardRow elements =
 
 viewCell : Cell -> Coords -> Element Msg
 viewCell cell coords =
-    case cell.shape of
-        Knob ->
-            showTile cell
-                coords
-                [ el [ width (px 15), height (px 15), centerX, centerY, moveRight 15, Background.color (rgb 1 1 1), Border.rounded 10 ] none
-                , el [ width (px 30), height (px 6), alignRight, Background.color (rgb 1 1 1) ] none
-                ]
-
-        Bar ->
-            showTile cell
-                coords
-                [ el [ width (px 30), height (px 6), alignLeft, Background.color (rgb 1 1 1) ] none
-                , el [ width (px 30), height (px 6), alignRight, Background.color (rgb 1 1 1), moveLeft 14 ] none
-                ]
-
-        Elbow ->
-            showTile cell
-                coords
-                [ el [ width (px 6), height (px 30), alignBottom, centerX, Background.color (rgb 1 1 1), moveRight 14 ] none
-                , el [ width (px 30), height (px 6), alignRight, Background.color (rgb 1 1 1) ] none
-                ]
-
-        Tee ->
-            showTile cell
-                coords
-                [ el [ width (px 30), height (px 6), alignLeft, Background.color (rgb 1 1 1) ] none
-                , el [ width (px 6), height (px 30), alignBottom, centerX, Background.color (rgb 1 1 1), moveLeft 9 ] none
-                , el [ width (px 30), height (px 6), alignRight, Background.color (rgb 1 1 1), moveLeft 14 ] none
-                ]
-
-        Empty ->
-            showTile cell coords []
-
-
-showTile : Cell -> Coords -> List (Element Msg) -> Element Msg
-showTile cell coords elements =
-    row
+    el
         [ width (px 60)
         , height (px 60)
         , centerX
@@ -126,4 +91,19 @@ showTile cell coords elements =
         , rotate (degrees (toFloat (cell.rotations * 90)))
         , Events.onClick (RotateTile coords)
         ]
-        elements
+        (case cell.shape of
+            Knob ->
+                knobSvg
+
+            Bar ->
+                barSvg
+
+            Elbow ->
+                elbowSvg
+
+            Tee ->
+                teeSvg
+
+            Empty ->
+                Element.none
+        )
