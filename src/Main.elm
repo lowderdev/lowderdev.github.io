@@ -9,7 +9,7 @@ import Element.Events as Events
 import Html exposing (Html)
 import Maybe exposing (andThen, withDefault)
 import Model exposing (Cell, Coords, Model, Shape(..), emptyCell, initGameState)
-import TileSvg exposing (barSvg, elbowSvg, knobSvg, teeSvg)
+import TileSvg exposing (barSvg, borderWidth, elbowSvg, knobSvg, teeSvg, tileWidth)
 
 
 main : Program () Model Msg
@@ -71,22 +71,22 @@ body content =
 
 gameWindow : List (Element msg) -> Element msg
 gameWindow contents =
-    column [ width (px 800), centerX, centerY, padding 20, Border.width 1, Border.color (rgb 0 0 0.9) ] contents
+    column [ centerX, centerY, Border.width borderWidth, Border.color (rgb 0.9 0 0) ] contents
 
 
 boardRow : List (Element msg) -> Element msg
 boardRow elements =
-    row [ centerX, centerY, width (px 600), Border.width 1, Border.color (rgb 0 0.9 0) ] elements
+    row [ centerX, centerY ] elements
 
 
 viewCell : Cell -> Coords -> Element Msg
 viewCell cell coords =
     el
-        [ width (px 60)
-        , height (px 60)
+        [ width (px tileWidth)
+        , height (px tileWidth)
         , centerX
         , centerY
-        , Border.width 1
+        , Border.width borderWidth
         , Border.color (rgb 0.9 0 0)
         , rotate (degrees (toFloat (cell.rotations * 90)))
         , Events.onClick (RotateTile coords)
