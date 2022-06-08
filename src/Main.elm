@@ -1,132 +1,129 @@
-module Main exposing (..)
-
--- Press buttons to increment and decrement a counter.
---
--- Read how it works:
---   https://guide.elm-lang.org/architecture/buttons.html
---
+module Main exposing (main)
 
 import Browser
-import Css
-import Css.Global
-import Html.Styled exposing (..)
-import Html.Styled.Attributes as Attr
-import Tailwind.Utilities as Tw
-
-
-
--- MAIN
+import Dict
+import Element exposing (..)
+import Element.Background as Background
+import Element.Border as Border
+import Element.Events as Events
+import Html exposing (Html)
+import Maybe exposing (andThen, withDefault)
+import Model exposing (Cell, Coords, Model, Shape(..), initGameState, emptyCell)
 
 
 main : Program () Model Msg
 main =
     Browser.sandbox
-        { init = init
+        { init = initGameState
         , update = update
-        , view = view >> toUnstyled
+        , view = view
         }
-
-
-
--- MODEL
-
-
-type alias Cell =
-    -- four bool fields to represent whether that connection is active or not
-    { connections : List Bool, rotations : Int }
-
-
-type alias Row =
-    List Cell
-
-
-type alias Grid =
-    List Row
-
-
-type alias Model =
-    { grid : Grid }
-
-
-init : Model
-init =
-    let
-        a =
-            [ { connections = [ True, True, False, False ], rotations = 0 } ]
-
-        b =
-            [ { connections = [ True, True, False, False ], rotations = 0 } ]
-
-        c =
-            [ { connections = [ True, True, False, False ], rotations = 0 } ]
-
-        d =
-            [ { connections = [ True, True, False, False ], rotations = 0 } ]
-    in
-    { grid = [ a, b, c, d ] }
-
-
-
--- UPDATE
 
 
 type Msg
     = Reset
+    | RotateTile Coords
 
 
 update : Msg -> Model -> Model
-update msg { grid } =
+update msg model =
     case msg of
         Reset ->
-            { grid = grid }
+            model
+
+        RotateTile coords ->
+            Dict.update coords (andThen (\cell -> Just { cell | rotations = cell.rotations + 1 })) model
 
 
-
--- VIEW
-
-
-view : Model -> Html msg
-view { grid } =
-    div [ Attr.css [ Tw.bg_gray_50, Tw.rounded_t_xl, Tw.p_24 ] ]
-        [ -- This will give us the standard tailwind style-reset as well as the fonts
-          Css.Global.global Tw.globalStyles
-        , viewBoard grid
-        ]
+view : Model -> Html Msg
+view model =
+    layout [] (viewBoard model)
 
 
-viewBoard : Grid -> Html msg
+viewBoard : Model -> Element Msg
 viewBoard grid =
-    div
-        [ Attr.css [ Tw.bg_blue_100, Tw.grid, Tw.grid_cols_2, Tw.w_24 ] ]
-        (List.map
-            (\row ->
-                div []
-                    (List.map
-                        (\cell ->
-                            viewCell cell
-                        )
-                        row
-                    )
-            )
-            grid
+    let
+        a =
+            withDefault emptyCell (Dict.get ( 0, 0 ) grid)
+
+        b =
+            withDefault emptyCell (Dict.get ( 0, 1 ) grid)
+
+        c =
+            withDefault emptyCell (Dict.get ( 1, 0 ) grid)
+
+        d =
+            withDefault emptyCell (Dict.get ( 1, 1 ) grid)
+    in
+    body
+        (gameWindow
+            [ boardRow [ viewCell a ( 0, 0 ), viewCell b ( 0, 1 ) ]
+            , boardRow [ viewCell c ( 1, 0 ), viewCell d ( 1, 1 ) ]
+            ]
         )
 
 
-viewCell : Cell -> Html msg
-viewCell { connections, rotations } =
-    case connections of
-        [ False, False, False, False ] ->
-            cellDiv
-
-        [ True, False, False, False ] ->
-            "l"
-
-        _ ->
-            " "
+body : Element msg -> Element msg
+body content =
+    el [ width fill, height fill, Background.color (rgb 0.3 0.3 0.3) ] content
 
 
-cellDiv : Html msg
-cellDiv =
-    div
-        [ Attr.css [ Tw.bg_blue_500, Tw.rounded_sm, Tw.w_12, Tw.h_12, Tw.text_center ] ]
-        [ text (showCell cell) ]
+gameWindow : List (Element msg) -> Element msg
+gameWindow contents =
+    column [ width (px 800), centerX, centerY, padding 20, Border.width 1, Border.color (rgb 0 0 0.9) ] contents
+
+
+boardRow : List (Element msg) -> Element msg
+boardRow elements =
+    row [ centerX, centerY, width (px 600), Border.width 1, Border.color (rgb 0 0.9 0) ] elements
+
+
+viewCell : Cell -> Coords -> Element Msg
+viewCell cell coords =
+    case cell.shape of
+        Knob ->
+            showTile cell
+                coords
+                [ el [ width (px 15), height (px 15), centerX, centerY, moveRight 15, Background.color (rgb 1 1 1), Border.rounded 10 ] none
+                , el [ width (px 30), height (px 6), alignRight, Background.color (rgb 1 1 1) ] none
+                ]
+
+        Bar ->
+            showTile cell
+                coords
+                [ el [ width (px 30), height (px 6), alignLeft, Background.color (rgb 1 1 1) ] none
+                , el [ width (px 30), height (px 6), alignRight, Background.color (rgb 1 1 1), moveLeft 14 ] none
+                ]
+
+        Elbow ->
+            showTile cell
+                coords
+                [ el [ width (px 6), height (px 30), alignBottom, centerX, Background.color (rgb 1 1 1), moveRight 14 ] none
+                , el [ width (px 30), height (px 6), alignRight, Background.color (rgb 1 1 1) ] none
+                ]
+
+        Tee ->
+            showTile cell
+                coords
+                [ el [ width (px 30), height (px 6), alignLeft, Background.color (rgb 1 1 1) ] none
+                , el [ width (px 6), height (px 30), alignBottom, centerX, Background.color (rgb 1 1 1), moveLeft 9 ] none
+                , el [ width (px 30), height (px 6), alignRight, Background.color (rgb 1 1 1), moveLeft 14 ] none
+                ]
+
+        Empty ->
+            showTile cell coords []
+
+
+showTile : Cell -> Coords -> List (Element Msg) -> Element Msg
+showTile cell coords elements =
+    row
+        [ width (px 60)
+        , height (px 60)
+        , centerX
+        , centerY
+        , Border.width 1
+        , Border.color (rgb 0.9 0 0)
+        , rotate (degrees (toFloat (cell.rotations * 90)))
+        , Events.onClick (RotateTile coords)
+        ]
+        elements
