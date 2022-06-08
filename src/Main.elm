@@ -9,31 +9,65 @@ import Element.Events as Events
 import Html exposing (Html)
 import Maybe exposing (andThen, withDefault)
 import Model exposing (Cell, Coords, Model, Shape(..), emptyCell, initGameState)
+import Random
 import TileSvg exposing (barSvg, borderWidth, elbowSvg, knobSvg, teeSvg, tileWidth)
 
 
 main : Program () Model Msg
 main =
-    Browser.sandbox
-        { init = initGameState
+    Browser.element
+        { init = init
+        , subscriptions = subscriptions
         , update = update
         , view = view
         }
 
 
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( initGameState [ ( 0, 0 ), ( 0, 0 ), ( 0, 0 ), ( 0, 0 ) ], generateRandomNumber )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.none
+
+
 type Msg
     = Reset
+    | GenerateRandomNumber
+    | NewRandomNumbers (List ( Int, Int ))
     | RotateTile Coords
 
 
-update : Msg -> Model -> Model
+zeroToThree : Cmd Msg
+zeroToThree =
+    Random.generate NewRandomNumbers (Random.list 4 (Random.pair (Random.int 0 3) (Random.int -3 0)))
+
+
+generateRandomNumber : Cmd Msg
+generateRandomNumber =
+    zeroToThree
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Reset ->
-            model
+            ( model, Cmd.none )
+
+        GenerateRandomNumber ->
+            ( model, generateRandomNumber )
+
+        NewRandomNumbers newNums ->
+            ( initGameState newNums, Cmd.none )
 
         RotateTile coords ->
-            Dict.update coords (andThen (\cell -> Just { cell | rotations = cell.rotations + 1 })) model
+            let
+                newModel =
+                    Dict.update coords (andThen (\cell -> Just { cell | rotations = cell.rotations + 1 })) model
+            in
+            ( newModel, Cmd.none )
 
 
 view : Model -> Html Msg

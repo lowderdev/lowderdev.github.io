@@ -1,6 +1,8 @@
 module Model exposing (..)
 
+import Array exposing (fromList)
 import Dict exposing (Dict)
+import Maybe exposing (andThen, withDefault)
 
 
 type alias Model =
@@ -23,20 +25,58 @@ type Shape
     | Empty
 
 
-initGameState : Model
-initGameState =
+getShape : List ( Int, Int ) -> Int -> Shape
+getShape ints index =
+    ints
+        |> fromList
+        |> Array.get index
+        |> andThen (\p -> Just (Tuple.first p))
+        |> andThen (\n -> Just (intToShape n))
+        |> withDefault Empty
+
+
+getRotation : List ( Int, Int ) -> Int -> Int
+getRotation ints index =
+    ints
+        |> fromList
+        |> Array.get index
+        |> andThen (\p -> Just (Tuple.second p))
+        |> withDefault -1
+
+
+intToShape : Int -> Shape
+intToShape int =
+    case int of
+        0 ->
+            Knob
+
+        1 ->
+            Bar
+
+        2 ->
+            Elbow
+
+        3 ->
+            Tee
+
+        _ ->
+            Empty
+
+
+initGameState : List ( Int, Int ) -> Model
+initGameState ints =
     let
         a =
-            { shape = Knob, rotations = 0 }
+            { shape = getShape ints 0, rotations = getRotation ints 0 }
 
         b =
-            { shape = Bar, rotations = 0 }
+            { shape = getShape ints 1, rotations = getRotation ints 1 }
 
         c =
-            { shape = Elbow, rotations = 0 }
+            { shape = getShape ints 2, rotations = getRotation ints 2 }
 
         d =
-            { shape = Tee, rotations = 0 }
+            { shape = getShape ints 3, rotations = getRotation ints 3 }
     in
     Dict.fromList
         [ ( ( 0, 0 ), a )
