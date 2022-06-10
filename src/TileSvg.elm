@@ -10,21 +10,30 @@ import Svg.Attributes exposing (..)
 -- These three integers, tileInnerWidth, strokeWidth, and borderWidth, should be the only
 -- params needed to change to resize the tile and the tile shapes.
 -- tileInnerWidth and strokeWidth should be evenly divisible by 2
+--
+-- Colors:
+-- navy (rgb255 6 40 61)
+-- blue (rgb255 19 99 223)
 
 
 tileInnerWidth : Int
 tileInnerWidth =
-    120
+    220
 
 
 strokeWidth : Int
 strokeWidth =
-    20
+    60
+
+
+strokeColor : Attribute msg
+strokeColor =
+    color "rgba(255,255,255,255)"
 
 
 borderWidth : Int
 borderWidth =
-    1
+    2
 
 
 halfWidthS : String
@@ -64,101 +73,97 @@ tileViewBox =
 
 knobSvg : Element msg
 knobSvg =
-    html
-        (svg
-            [ width tileInnerWidthS
-            , height tileInnerWidthS
-            , tileViewBox
+    styledSvg
+        [ circle
+            [ cx halfWidthS
+            , cy halfWidthS
+            , r (toString (toFloat strokeWidth * 0.8))
+            , fill "currentcolor"
             ]
-            [ circle
-                [ cx halfWidthS
-                , cy halfWidthS
-                , r strokeWidthS
-                ]
-                []
-            , rect
-                [ x halfWidthS
-                , y centerStrokeS
-                , width halfWidthS
-                , height strokeWidthS
-                ]
-                []
+            []
+        , rect
+            [ x halfWidthS
+            , y centerStrokeS
+            , width halfWidthS
+            , height strokeWidthS
+            , fill "currentcolor"
             ]
-        )
+            []
+        ]
 
 
 elbowSvg : Element msg
 elbowSvg =
-    html
-        (Svg.svg
-            [ width tileInnerWidthS
-            , height tileInnerWidthS
-            , tileViewBox
+    styledSvg
+        [ rect
+            [ x centerStrokeS
+            , y halfWidthS
+            , width strokeWidthS
+            , height halfWidthS
+            , fill "currentcolor"
             ]
-            [ rect
-                [ x centerStrokeS
-                , y halfWidthS
-                , width strokeWidthS
-                , height halfWidthS
-                ]
-                []
-            , rect
-                [ x halfWidthS
-                , y centerStrokeS
-                , width halfWidthS
-                , height strokeWidthS
-                ]
-                []
-            , circle
-                [ cx halfWidthS
-                , cy halfWidthS
-                , r (toString strokeWidthOffset)
-                ]
-                []
+            []
+        , rect
+            [ x halfWidthS
+            , y centerStrokeS
+            , width halfWidthS
+            , height strokeWidthS
+            , fill "currentcolor"
             ]
-        )
+            []
+        , circle
+            [ cx halfWidthS
+            , cy halfWidthS
+            , r (toString strokeWidthOffset)
+            , fill "currentcolor"
+            ]
+            []
+        ]
 
 
 barSvg : Element msg
 barSvg =
-    html
-        (Svg.svg
-            [ width tileInnerWidthS
-            , height tileInnerWidthS
-            , tileViewBox
+    styledSvg
+        [ rect
+            [ x "0"
+            , y centerStrokeS
+            , width tileInnerWidthS
+            , height strokeWidthS
+            , fill "currentcolor"
             ]
-            [ rect
-                [ x "0"
-                , y centerStrokeS
-                , width tileInnerWidthS
-                , height strokeWidthS
-                ]
-                []
-            ]
-        )
+            []
+        ]
 
 
 teeSvg : Element msg
 teeSvg =
-    html
-        (Svg.svg
+    styledSvg
+        [ rect
+            [ x "0"
+            , y centerStrokeS
+            , width tileInnerWidthS
+            , height strokeWidthS
+            , fill "currentcolor"
+            ]
+            []
+        , rect
+            [ x centerStrokeS
+            , y halfWidthS
+            , width strokeWidthS
+            , height halfWidthS
+            , fill "currentcolor"
+            ]
+            []
+        ]
+
+
+styledSvg : List (Svg msg) -> Element msg
+styledSvg elements =
+    html <|
+        Svg.svg
             [ width tileInnerWidthS
             , height tileInnerWidthS
             , tileViewBox
+            , strokeColor
             ]
-            [ rect
-                [ x "0"
-                , y centerStrokeS
-                , width tileInnerWidthS
-                , height strokeWidthS
-                ]
-                []
-            , rect
-                [ x centerStrokeS
-                , y halfWidthS
-                , width strokeWidthS
-                , height halfWidthS
-                ]
-                []
-            ]
-        )
+            elements

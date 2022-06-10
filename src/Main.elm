@@ -111,12 +111,19 @@ split toTake list =
 
 body : Element msg -> Element msg
 body content =
-    el [ width fill, height fill, Background.color (rgb 0.3 0.3 0.3) ] content
+    el [ width fill, height fill, Background.color (rgb255 17 43 60) ] content
 
 
 gameWindow : List (Element msg) -> Element msg
 gameWindow contents =
-    column [ centerX, centerY, Border.width borderWidth, Border.color (rgb 0.9 0 0) ] contents
+    column
+        [ centerX
+        , centerY
+        , Border.width borderWidth
+        , Border.color
+            (rgb255 17 43 60)
+        ]
+        contents
 
 
 boardRow : List (Element msg) -> Element msg
@@ -132,7 +139,9 @@ viewCell coords cell =
         , centerX
         , centerY
         , Border.width borderWidth
-        , Border.color (rgb 0.9 0 0)
+        , Border.color (rgb255 17 43 60)
+        , Border.rounded 4
+        , Background.color (rgb255 32 83 117)
         , rotate (degrees (toFloat (cell.rotations * 90)))
         , Events.onClick (RotateTile coords)
         ]
