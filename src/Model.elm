@@ -1,8 +1,7 @@
 module Model exposing (..)
 
-import Array exposing (fromList)
 import Dict exposing (Dict)
-import Maybe exposing (andThen, withDefault)
+import List exposing (length)
 
 
 type alias Model =
@@ -25,25 +24,6 @@ type Shape
     | Empty
 
 
-getShape : List ( Int, Int ) -> Int -> Shape
-getShape ints index =
-    ints
-        |> fromList
-        |> Array.get index
-        |> andThen (\p -> Just (Tuple.first p))
-        |> andThen (\n -> Just (intToShape n))
-        |> withDefault Empty
-
-
-getRotation : List ( Int, Int ) -> Int -> Int
-getRotation ints index =
-    ints
-        |> fromList
-        |> Array.get index
-        |> andThen (\p -> Just (Tuple.second p))
-        |> withDefault -1
-
-
 intToShape : Int -> Shape
 intToShape int =
     case int of
@@ -63,29 +43,26 @@ intToShape int =
             Empty
 
 
-initGameState : List ( Int, Int ) -> Model
-initGameState ints =
+initGameState : List Cell -> Model
+initGameState cells =
     let
-        a =
-            { shape = getShape ints 0, rotations = getRotation ints 0 }
+        xy =
+            List.range 0 (length cells)
 
-        b =
-            { shape = getShape ints 1, rotations = getRotation ints 1 }
+        listOfCoords =
+            cartesian xy xy
 
-        c =
-            { shape = getShape ints 2, rotations = getRotation ints 2 }
-
-        d =
-            { shape = getShape ints 3, rotations = getRotation ints 3 }
+        coordsToCell =
+            List.map2 Tuple.pair listOfCoords cells
     in
-    Dict.fromList
-        [ ( ( 0, 0 ), a )
-        , ( ( 0, 1 ), b )
-        , ( ( 1, 0 ), c )
-        , ( ( 1, 1 ), d )
-        ]
+    Dict.fromList coordsToCell
 
 
 emptyCell : Cell
 emptyCell =
     { shape = Empty, rotations = 0 }
+
+
+cartesian : List a -> List b -> List ( a, b )
+cartesian xs ys =
+    List.concatMap (\x -> List.map (\y -> ( x, y )) ys) xs

@@ -7,10 +7,15 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Html exposing (Html)
-import Maybe exposing (andThen, withDefault)
-import Model exposing (Cell, Coords, Model, Shape(..), emptyCell, initGameState)
+import Maybe exposing (andThen)
+import Model exposing (Cell, Coords, Model, Shape(..), emptyCell, initGameState, intToShape)
 import Random
 import TileSvg exposing (barSvg, borderWidth, elbowSvg, knobSvg, teeSvg, tileWidth)
+
+
+boardSize : Int
+boardSize =
+    3
 
 
 main : Program () Model Msg
@@ -25,7 +30,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initGameState [ ( 0, 0 ), ( 0, 0 ), ( 0, 0 ), ( 0, 0 ) ], generateRandomNumber )
+    ( initGameState (List.repeat (boardSize * boardSize) emptyCell), generateCells )
 
 
 subscriptions : Model -> Sub Msg
@@ -35,19 +40,22 @@ subscriptions _ =
 
 type Msg
     = Reset
-    | GenerateRandomNumber
-    | NewRandomNumbers (List ( Int, Int ))
+    | GenerateCells
+    | NewCells (List Cell)
     | RotateTile Coords
 
 
-zeroToThree : Cmd Msg
-zeroToThree =
-    Random.generate NewRandomNumbers (Random.list 4 (Random.pair (Random.int 0 3) (Random.int -3 0)))
+generateCells : Cmd Msg
+generateCells =
+    Random.generate NewCells (Random.list (boardSize * boardSize) randomCell)
 
 
-generateRandomNumber : Cmd Msg
-generateRandomNumber =
-    zeroToThree
+randomCell : Random.Generator Cell
+randomCell =
+    Random.map2
+        (\x y -> { shape = intToShape x, rotations = y })
+        (Random.int 0 3)
+        (Random.int -3 0)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -56,46 +64,49 @@ update msg model =
         Reset ->
             ( model, Cmd.none )
 
-        GenerateRandomNumber ->
-            ( model, generateRandomNumber )
+        GenerateCells ->
+            ( model, generateCells )
 
-        NewRandomNumbers newNums ->
-            ( initGameState newNums, Cmd.none )
+        NewCells randomCells ->
+            ( initGameState randomCells, Cmd.none )
 
         RotateTile coords ->
             let
                 newModel =
-                    Dict.update coords (andThen (\cell -> Just { cell | rotations = cell.rotations + 1 })) model
+                    Dict.update
+                        coords
+                        (andThen (\cell -> Just { cell | rotations = cell.rotations + 1 }))
+                        model
             in
             ( newModel, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
-    layout [] (viewBoard model)
-
-
-viewBoard : Model -> Element Msg
-viewBoard grid =
     let
-        a =
-            withDefault emptyCell (Dict.get ( 0, 0 ) grid)
+        widthHeight =
+            round <| sqrt <| toFloat <| Dict.size <| model
 
-        b =
-            withDefault emptyCell (Dict.get ( 0, 1 ) grid)
+        tiles =
+            Dict.foldr (\k v acc -> viewCell k v :: acc) [] model
 
-        c =
-            withDefault emptyCell (Dict.get ( 1, 0 ) grid)
-
-        d =
-            withDefault emptyCell (Dict.get ( 1, 1 ) grid)
+        rows =
+            split widthHeight tiles
     in
-    body
-        (gameWindow
-            [ boardRow [ viewCell a ( 0, 0 ), viewCell b ( 0, 1 ) ]
-            , boardRow [ viewCell c ( 1, 0 ), viewCell d ( 1, 1 ) ]
-            ]
+    layout []
+        (body
+            (gameWindow (List.map (\x -> boardRow x) rows))
         )
+
+
+split : Int -> List a -> List (List a)
+split toTake list =
+    case list of
+        [] ->
+            []
+
+        _ ->
+            List.take toTake list :: split toTake (List.drop toTake list)
 
 
 body : Element msg -> Element msg
@@ -113,8 +124,8 @@ boardRow elements =
     row [ centerX, centerY ] elements
 
 
-viewCell : Cell -> Coords -> Element Msg
-viewCell cell coords =
+viewCell : Coords -> Cell -> Element Msg
+viewCell coords cell =
     el
         [ width (px tileWidth)
         , height (px tileWidth)
