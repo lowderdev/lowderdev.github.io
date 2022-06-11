@@ -15,7 +15,7 @@ import TileSvg exposing (barSvg, borderWidth, elbowSvg, knobSvg, teeSvg, tileWid
 
 boardSize : Int
 boardSize =
-    3
+    5
 
 
 main : Program () Model Msg
@@ -30,7 +30,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initGameState (List.repeat (boardSize * boardSize) emptyCell), generateCells )
+    ( initGameState boardSize (Random.initialSeed 1), Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
@@ -40,14 +40,15 @@ subscriptions _ =
 
 type Msg
     = Reset
-    | GenerateCells
-    | NewCells (List Cell)
+      -- | GenerateCells
+      -- | NewCells (List Cell)
     | RotateTile Coords
 
 
-generateCells : Cmd Msg
-generateCells =
-    Random.generate NewCells (Random.list (boardSize * boardSize) randomCell)
+
+-- generateSeed : Cmd Msg
+-- generateSeed =
+--     Random.generate NewCells (Random.list (boardSize * boardSize) randomCell)
 
 
 randomCell : Random.Generator Cell
@@ -64,12 +65,10 @@ update msg model =
         Reset ->
             ( model, Cmd.none )
 
-        GenerateCells ->
-            ( model, generateCells )
-
-        NewCells randomCells ->
-            ( initGameState randomCells, Cmd.none )
-
+        -- GenerateCells ->
+        --     ( model, generateCells )
+        -- NewCells randomCells ->
+        --     ( initGameState randomCells, Cmd.none )
         RotateTile coords ->
             let
                 newModel =
@@ -140,7 +139,7 @@ viewCell coords cell =
         , centerY
         , Border.width borderWidth
         , Border.color (rgb255 17 43 60)
-        , Border.rounded 4
+        , Border.rounded 6
         , Background.color (rgb255 32 83 117)
         , rotate (degrees (toFloat (cell.rotations * 90)))
         , Events.onClick (RotateTile coords)
