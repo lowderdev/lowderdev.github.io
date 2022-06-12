@@ -1,8 +1,6 @@
 module Model exposing (..)
 
-import Css exposing (num, true)
-import Dict exposing (Dict, foldr)
-import List exposing (any, length)
+import Dict exposing (Dict)
 import Maybe exposing (withDefault)
 import Random
 import Svg.Styled.Attributes exposing (x)
@@ -55,8 +53,8 @@ type alias Connections =
     { n : Bool, w : Bool, s : Bool, e : Bool }
 
 
-foo : Coords -> Int -> Random.Seed -> Board -> ( Board, Random.Seed )
-foo (( x, y ) as coords) maxCoord seed0 board =
+generateConnections : Coords -> Int -> Random.Seed -> Board -> ( Board, Random.Seed )
+generateConnections (( x, y ) as coords) maxCoord seed0 board =
     let
         lookN =
             Dict.get ( x - 1, y ) board
@@ -101,7 +99,7 @@ generateBoard boardSize seed0 =
     in
     Tuple.first <|
         List.foldl
-            (\coords ( board, seed ) -> foo coords maxCoord seed board)
+            (\coords ( board, seed ) -> generateConnections coords maxCoord seed board)
             ( Dict.empty, seed0 )
             listOfCoords
 

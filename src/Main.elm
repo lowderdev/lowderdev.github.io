@@ -8,7 +8,7 @@ import Element.Border as Border
 import Element.Events as Events
 import Html exposing (Html)
 import Maybe exposing (andThen)
-import Model exposing (Cell, Coords, Model, Shape(..), emptyCell, initGameState, intToShape)
+import Model exposing (Cell, Coords, Model, Shape(..), initGameState)
 import Random
 import TileSvg exposing (barSvg, borderWidth, elbowSvg, knobSvg, teeSvg, tileWidth)
 
@@ -30,7 +30,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initGameState boardSize (Random.initialSeed 1), Cmd.none )
+    ( initGameState boardSize (Random.initialSeed 1), generateInt )
 
 
 subscriptions : Model -> Sub Msg
@@ -40,23 +40,14 @@ subscriptions _ =
 
 type Msg
     = Reset
-      -- | GenerateCells
-      -- | NewCells (List Cell)
+    | GenerateInt
+    | NewInt Int
     | RotateTile Coords
 
 
-
--- generateSeed : Cmd Msg
--- generateSeed =
---     Random.generate NewCells (Random.list (boardSize * boardSize) randomCell)
-
-
-randomCell : Random.Generator Cell
-randomCell =
-    Random.map2
-        (\x y -> { shape = intToShape x, rotations = y })
-        (Random.int 0 3)
-        (Random.int -3 0)
+generateInt : Cmd Msg
+generateInt =
+    Random.generate NewInt (Random.int Random.minInt Random.maxInt)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -65,10 +56,12 @@ update msg model =
         Reset ->
             ( model, Cmd.none )
 
-        -- GenerateCells ->
-        --     ( model, generateCells )
-        -- NewCells randomCells ->
-        --     ( initGameState randomCells, Cmd.none )
+        GenerateInt ->
+            ( model, generateInt )
+
+        NewInt int ->
+            ( initGameState boardSize (Random.initialSeed int), Cmd.none )
+
         RotateTile coords ->
             let
                 newModel =

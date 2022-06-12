@@ -28,7 +28,7 @@ strokeWidth =
 
 strokeColor : Attribute msg
 strokeColor =
-    color "rgba(255,255,255,255)"
+    color "rgba(255, 255, 255, 255)"
 
 
 borderWidth : Int
@@ -82,10 +82,10 @@ knobSvg =
             ]
             []
         , rect
-            [ x halfWidthS
-            , y centerStrokeS
-            , width halfWidthS
-            , height strokeWidthS
+            [ x centerStrokeS
+            , y "0"
+            , width strokeWidthS
+            , height halfWidthS
             , fill "currentcolor"
             ]
             []
@@ -97,7 +97,7 @@ elbowSvg =
     styledSvg
         [ rect
             [ x centerStrokeS
-            , y halfWidthS
+            , y "0"
             , width strokeWidthS
             , height halfWidthS
             , fill "currentcolor"
@@ -125,10 +125,10 @@ barSvg : Element msg
 barSvg =
     styledSvg
         [ rect
-            [ x "0"
-            , y centerStrokeS
-            , width tileInnerWidthS
-            , height strokeWidthS
+            [ x centerStrokeS
+            , y "0"
+            , width strokeWidthS
+            , height tileInnerWidthS
             , fill "currentcolor"
             ]
             []
@@ -139,18 +139,18 @@ teeSvg : Element msg
 teeSvg =
     styledSvg
         [ rect
-            [ x "0"
-            , y centerStrokeS
-            , width tileInnerWidthS
-            , height strokeWidthS
+            [ x centerStrokeS
+            , y "0"
+            , width strokeWidthS
+            , height tileInnerWidthS
             , fill "currentcolor"
             ]
             []
         , rect
-            [ x centerStrokeS
-            , y halfWidthS
-            , width strokeWidthS
-            , height halfWidthS
+            [ x halfWidthS
+            , y centerStrokeS
+            , width halfWidthS
+            , height strokeWidthS
             , fill "currentcolor"
             ]
             []
