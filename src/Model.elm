@@ -1,9 +1,8 @@
 module Model exposing (..)
 
 import Dict exposing (Dict)
-import Maybe exposing (withDefault)
+import Maybe
 import Random
-import Svg.Styled.Attributes exposing (x)
 
 
 type alias Model =
@@ -26,6 +25,21 @@ type Shape
     | Empty
 
 
+type alias Board =
+    Dict Coords Connections
+
+
+type alias Connections =
+    { n : Bool, w : Bool, s : Bool, e : Bool }
+
+
+type Direction
+    = N
+    | W
+    | S
+    | E
+
+
 intToShape : Int -> Shape
 intToShape int =
     case int of
@@ -45,92 +59,22 @@ intToShape int =
             Empty
 
 
-type alias Board =
-    Dict Coords Connections
-
-
-type alias Connections =
-    { n : Bool, w : Bool, s : Bool, e : Bool }
-
-
-generateConnections : Coords -> Int -> Random.Seed -> Board -> ( Board, Random.Seed )
-generateConnections (( x, y ) as coords) maxCoord seed0 board =
-    let
-        lookN =
-            Dict.get ( x - 1, y ) board
-                |> Maybe.andThen (\{ s } -> Just s)
-                |> withDefault False
-
-        lookW =
-            Dict.get ( x, y - 1 ) board
-                |> Maybe.andThen (\{ e } -> Just e)
-                |> withDefault False
-
-        ( lookS, seed1 ) =
-            if x == maxCoord then
-                ( False, seed0 )
-
-            else
-                Random.step (Random.int 0 1) seed0
-                    |> (\( int, seed ) -> ( int == 1, seed ))
-
-        ( lookE, seed2 ) =
-            if y == maxCoord then
-                ( False, seed1 )
-
-            else
-                Random.step (Random.int 0 1) seed1
-                    |> (\( int, seed ) -> ( int == 1, seed ))
-    in
-    ( Dict.insert coords { n = lookN, w = lookW, s = lookS, e = lookE } board, seed2 )
-
-
-generateBoard : Int -> Random.Seed -> Board
-generateBoard boardSize seed0 =
-    let
-        maxCoord =
-            boardSize - 1
-
-        xy =
-            List.range 0 maxCoord
-
-        listOfCoords =
-            cartesian xy xy
-    in
-    Tuple.first <|
-        List.foldl
-            (\coords ( board, seed ) -> generateConnections coords maxCoord seed board)
-            ( Dict.empty, seed0 )
-            listOfCoords
-
-
-
--- generateCell { boardSize, seed0 } coords =
---     let
---         maxCoord =
---             boardSize - 1
---     in
-
-
-onCorner : Coords -> Int -> Bool
-onCorner coords maxCoord =
-    let
-        corners =
-            [ ( 0, 0 ), ( 0, maxCoord ), ( maxCoord, 0 ), ( maxCoord, maxCoord ) ]
-    in
-    List.member coords corners
-
-
-onEdge : Coords -> Int -> Bool
-onEdge ( x, y ) maxCoord =
-    x == 0 || x == maxCoord || y == 0 || y == maxCoord
+emptyCon : Connections
+emptyCon =
+    { n = False, w = False, s = False, e = False }
 
 
 initGameState : Int -> Random.Seed -> Model
 initGameState boardSize seed0 =
     let
-        newBoard =
-            generateBoard boardSize seed0
+        maxCoord =
+            boardSize - 1
+
+        initBoard =
+            Dict.insert ( 0, 0 ) emptyCon Dict.empty
+
+        ( finishedBoard, _ ) =
+            depthFirstMazeGen ( 0, 0 ) [ ( 0, 0 ) ] maxCoord seed0 initBoard
 
         newModel : Model
         newModel =
@@ -139,7 +83,7 @@ initGameState boardSize seed0 =
     Dict.foldl
         (\coords connections model -> Dict.insert coords (toCell connections) model)
         newModel
-        newBoard
+        finishedBoard
 
 
 toCell : Connections -> Cell
@@ -198,3 +142,147 @@ emptyCell =
 cartesian : List a -> List b -> List ( a, b )
 cartesian xs ys =
     List.concatMap (\x -> List.map (\y -> ( x, y )) ys) xs
+
+
+depthFirstMazeGen : Coords -> List Coords -> Int -> Random.Seed -> Board -> ( Board, Random.Seed )
+depthFirstMazeGen (( x, y ) as currentCoords) searchPoints maxCoord seed0 board =
+    let
+        canVisitN =
+            if x /= 0 && not (Dict.member ( x - 1, y ) board) then
+                Just N
+
+            else
+                Nothing
+
+        canVisitW =
+            if y /= 0 && not (Dict.member ( x, y - 1 ) board) then
+                Just W
+
+            else
+                Nothing
+
+        canVisitS =
+            if x /= maxCoord && not (Dict.member ( x + 1, y ) board) then
+                Just S
+
+            else
+                Nothing
+
+        canVisitE =
+            if y /= maxCoord && not (Dict.member ( x, y + 1 ) board) then
+                Just E
+
+            else
+                Nothing
+
+        canVisit =
+            List.foldr
+                (\maybeDirection acc ->
+                    case maybeDirection of
+                        Just dir ->
+                            dir :: acc
+
+                        Nothing ->
+                            acc
+                )
+                []
+                [ canVisitN
+                , canVisitW
+                , canVisitS
+                , canVisitE
+                ]
+
+        numberOfVisitable =
+            List.length canVisit
+
+        allNeighborsVisited =
+            numberOfVisitable == 0
+    in
+    case searchPoints of
+        [] ->
+            ( board, seed0 )
+
+        (head :: tail) as points ->
+            if allNeighborsVisited then
+                depthFirstMazeGen head tail maxCoord seed0 board
+
+            else
+                let
+                    newPoints =
+                        currentCoords :: points
+
+                    ( randomInt, seed1 ) =
+                        Random.step (Random.int 0 (numberOfVisitable - 1)) seed0
+
+                    neighborDir =
+                        case List.drop randomInt canVisit of
+                            [] ->
+                                N
+
+                            dir :: _ ->
+                                dir
+
+                    neighborCoords =
+                        case neighborDir of
+                            N ->
+                                ( x - 1, y )
+
+                            W ->
+                                ( x, y - 1 )
+
+                            S ->
+                                ( x + 1, y )
+
+                            E ->
+                                ( x, y + 1 )
+
+                    newBoard =
+                        connectPoints currentCoords neighborCoords neighborDir board
+                in
+                depthFirstMazeGen neighborCoords newPoints maxCoord seed1 newBoard
+
+
+connectPoints : Coords -> Coords -> Direction -> Board -> Board
+connectPoints currentCoords neighborCoords neighborDir board =
+    let
+        newBoard1 =
+            Dict.update
+                currentCoords
+                (Maybe.andThen
+                    (\cons ->
+                        Just <|
+                            case neighborDir of
+                                N ->
+                                    { cons | n = True }
+
+                                W ->
+                                    { cons | w = True }
+
+                                S ->
+                                    { cons | s = True }
+
+                                E ->
+                                    { cons | e = True }
+                    )
+                )
+                board
+
+        newBoard2 =
+            Dict.insert
+                neighborCoords
+                (case neighborDir of
+                    N ->
+                        { emptyCon | s = True }
+
+                    W ->
+                        { emptyCon | e = True }
+
+                    S ->
+                        { emptyCon | n = True }
+
+                    E ->
+                        { emptyCon | w = True }
+                )
+                newBoard1
+    in
+    newBoard2
