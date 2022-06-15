@@ -70,19 +70,20 @@ initGameState boardSize seed0 =
         maxCoord =
             boardSize - 1
 
+        ( randomCoords, seed1 ) =
+            Random.step
+                (Random.pair (Random.int 0 maxCoord) (Random.int 0 maxCoord))
+                seed0
+
         initBoard =
-            Dict.insert ( 0, 0 ) emptyCon Dict.empty
+            Dict.insert randomCoords emptyCon Dict.empty
 
-        ( finishedBoard, _ ) =
-            depthFirstMazeGen ( 0, 0 ) [ ( 0, 0 ) ] maxCoord seed0 initBoard
-
-        newModel : Model
-        newModel =
-            Dict.empty
+        finishedBoard =
+            Tuple.first <| depthFirstMazeGen randomCoords [ randomCoords ] maxCoord seed1 initBoard
     in
     Dict.foldl
         (\coords connections model -> Dict.insert coords (toCell connections) model)
-        newModel
+        Dict.empty
         finishedBoard
 
 
@@ -137,11 +138,6 @@ toCell { n, w, s, e } =
 emptyCell : Cell
 emptyCell =
     { shape = Empty, rotations = 0 }
-
-
-cartesian : List a -> List b -> List ( a, b )
-cartesian xs ys =
-    List.concatMap (\x -> List.map (\y -> ( x, y )) ys) xs
 
 
 depthFirstMazeGen : Coords -> List Coords -> Int -> Random.Seed -> Board -> ( Board, Random.Seed )

@@ -18,12 +18,12 @@ import Svg.Attributes exposing (..)
 
 tileInnerWidth : Int
 tileInnerWidth =
-    220
+    100
 
 
 strokeWidth : Int
 strokeWidth =
-    60
+    40
 
 
 strokeColor : Attribute msg
@@ -33,7 +33,7 @@ strokeColor =
 
 borderWidth : Int
 borderWidth =
-    2
+    1
 
 
 halfWidthS : String
