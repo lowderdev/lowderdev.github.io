@@ -1,7 +1,7 @@
 module Model exposing (..)
 
 import Dict exposing (Dict)
-import Maybe
+import Maybe exposing (withDefault)
 import Random
 
 
@@ -193,13 +193,28 @@ depthFirstMazeGen (( x, y ) as currentCoords) searchPoints maxCoord seed0 board 
 
         allNeighborsVisited =
             numberOfVisitable == 0
+
+        { n, w, s, e } =
+            withDefault emptyCon (Dict.get currentCoords board)
+
+        numberOfConnections =
+            List.foldr
+                (\b acc ->
+                    if b then
+                        acc + 1
+
+                    else
+                        acc
+                )
+                0
+                [ n, w, s, e ]
     in
     case searchPoints of
         [] ->
             ( board, seed0 )
 
         (head :: tail) as points ->
-            if allNeighborsVisited then
+            if allNeighborsVisited || (numberOfConnections == 3) then
                 depthFirstMazeGen head tail maxCoord seed0 board
 
             else
