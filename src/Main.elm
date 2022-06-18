@@ -6,19 +6,22 @@ import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
+import Element.Font as Font
+import Element.Input as Input
+import Element.Region as Region
 import Html exposing (Html)
 import Maybe exposing (andThen)
-import Model exposing (Cell, Coords, Model, Shape(..), initGameState)
+import Model exposing (Cell, Coords, GameState, Shape(..), initGameState)
 import Random
 import TileSvg exposing (barSvg, borderWidth, elbowSvg, knobSvg, teeSvg, tileWidth)
 
 
-boardSize : Int
-boardSize =
-    5
+defaultBoardSize : Int
+defaultBoardSize =
+    4
 
 
-main : Program () Model Msg
+main : Program () GameState Msg
 main =
     Browser.element
         { init = init
@@ -28,66 +31,103 @@ main =
         }
 
 
-init : () -> ( Model, Cmd Msg )
+init : () -> ( GameState, Cmd Msg )
 init _ =
-    ( initGameState boardSize (Random.initialSeed 1), generateInt )
+    ( initGameState
+        { boardSize = defaultBoardSize
+        , board = Dict.empty
+        , seed = Random.initialSeed 1
+        , solved = False
+        }
+    , generateSeed
+    )
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : GameState -> Sub Msg
 subscriptions _ =
     Sub.none
 
 
 type Msg
     = Reset
-    | GenerateInt
-    | NewInt Int
+    | GenerateSeed
+    | NewSeed Int
     | RotateTile Coords
+    | DecSize
+    | IncSize
 
 
-generateInt : Cmd Msg
-generateInt =
-    Random.generate NewInt (Random.int Random.minInt Random.maxInt)
+generateSeed : Cmd Msg
+generateSeed =
+    Random.generate NewSeed (Random.int Random.minInt Random.maxInt)
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> GameState -> ( GameState, Cmd Msg )
+update msg ({ boardSize, board } as gameState) =
     case msg of
         Reset ->
-            ( model, Cmd.none )
+            ( gameState, Cmd.none )
 
-        GenerateInt ->
-            ( model, generateInt )
+        GenerateSeed ->
+            ( gameState, generateSeed )
 
-        NewInt int ->
-            ( initGameState boardSize (Random.initialSeed int), Cmd.none )
+        NewSeed int ->
+            ( initGameState { gameState | seed = Random.initialSeed int }, Cmd.none )
 
         RotateTile coords ->
             let
-                newModel =
+                newBoard =
                     Dict.update
-                        coords
-                        (andThen (\cell -> Just { cell | rotations = cell.rotations + 1 }))
-                        model
+                        (Debug.log "coords" coords)
+                        (andThen (\cell -> Just { cell | rotations = remainderBy 4 (cell.rotations + 1) }))
+                        board
+
+                isSolved =
+                    Debug.log "solved" <|
+                        List.all
+                            (\x -> x == 0)
+                            (Debug.log "board" (List.map (\{ rotations } -> rotations) (Dict.values newBoard)))
             in
-            ( newModel, Cmd.none )
+            ( { gameState | board = newBoard, solved = isSolved }, Cmd.none )
+
+        DecSize ->
+            let
+                minSize =
+                    3
+
+                newBoardSize =
+                    max minSize (boardSize - 1)
+            in
+            ( initGameState { gameState | boardSize = newBoardSize }, generateSeed )
+
+        IncSize ->
+            let
+                maxSize =
+                    10
+
+                newBoardSize =
+                    min (boardSize + 1) maxSize
+            in
+            ( initGameState { gameState | boardSize = newBoardSize }, generateSeed )
 
 
-view : Model -> Html Msg
-view model =
+view : GameState -> Html Msg
+view ({ board } as gameState) =
     let
         widthHeight =
-            round <| sqrt <| toFloat <| Dict.size <| model
+            round <| sqrt <| toFloat <| Dict.size <| board
 
         tiles =
-            Dict.foldr (\k v acc -> viewCell k v :: acc) [] model
+            Dict.foldr (\k v acc -> viewCell k v :: acc) [] board
 
         rows =
             split widthHeight tiles
     in
     layout []
         (body
-            (gameWindow (List.map (\x -> boardRow x) rows))
+            [ gameWindowHeader gameState
+            , gameWindow (List.map (\x -> boardRow x) rows)
+            ]
         )
 
 
@@ -101,12 +141,14 @@ split toTake list =
             List.take toTake list :: split toTake (List.drop toTake list)
 
 
-body : Element msg -> Element msg
-body content =
-    el [ width fill, height fill, Background.color (rgb255 17 43 60) ] content
+body : List (Element msg) -> Element msg
+body contents =
+    column
+        [ width fill, height fill, Background.color (rgb255 17 43 60), Font.color (rgb 1 1 1) ]
+        contents
 
 
-gameWindow : List (Element msg) -> Element msg
+gameWindow : List (Element Msg) -> Element Msg
 gameWindow contents =
     column
         [ centerX
@@ -116,6 +158,79 @@ gameWindow contents =
             (rgb255 17 43 60)
         ]
         contents
+
+
+gameWindowHeader : GameState -> Element Msg
+gameWindowHeader gameState =
+    row [ width fill, height (px 80), spacing 4, padding 50 ]
+        [ paragraph []
+            [ text
+                (if gameState.solved then
+                    "Solved!"
+
+                 else
+                    ""
+                )
+            ]
+        , decSizeButton gameState
+        , incSizeButton gameState
+        , Input.button
+            [ width (px 40)
+            , Font.center
+            , padding 10
+            , Border.rounded 6
+            , Background.color (rgb255 32 83 117)
+            ]
+            { onPress = Just GenerateSeed, label = text "🔄" }
+        ]
+
+
+decSizeButton : GameState -> Element Msg
+decSizeButton gameState =
+    if gameState.boardSize <= 3 then
+        Input.button
+            [ width (px 40)
+            , Font.center
+            , padding 10
+            , Border.rounded 6
+            , Background.color (rgb255 122 135 157)
+            , Region.description "board at min size"
+            ]
+            { onPress = Nothing, label = text "-" }
+
+    else
+        Input.button
+            [ width (px 40)
+            , Font.center
+            , padding 10
+            , Border.rounded 6
+            , Background.color (rgb255 32 83 117)
+            ]
+            { onPress = Just DecSize, label = text "-" }
+
+
+incSizeButton : GameState -> Element Msg
+incSizeButton gameState =
+    if gameState.boardSize >= 10 then
+        Input.button
+            [ width (px 40)
+            , Font.center
+            , padding 10
+            , Border.rounded 6
+            , Background.color (rgb255 122 135 157)
+            , Region.description "board at max size"
+            ]
+            { onPress = Nothing, label = text "+" }
+
+    else
+        Input.button
+            [ width (px 40)
+            , Font.center
+            , padding 10
+            , Border.rounded 6
+            , Background.color (rgb255 32 83 117)
+            ]
+            { onPress = Just IncSize, label = text "+" }
 
 
 boardRow : List (Element msg) -> Element msg
@@ -134,7 +249,7 @@ viewCell coords cell =
         , Border.color (rgb255 17 43 60)
         , Border.rounded 6
         , Background.color (rgb255 32 83 117)
-        , rotate (degrees (toFloat (cell.rotations * 90)))
+        , rotate (degrees (toFloat ((cell.initRotations + cell.rotations) * 90)))
         , Events.onClick (RotateTile coords)
         ]
         (case cell.shape of

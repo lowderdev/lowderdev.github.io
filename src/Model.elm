@@ -5,7 +5,15 @@ import Maybe exposing (withDefault)
 import Random
 
 
-type alias Model =
+type alias GameState =
+    { boardSize : Int
+    , board : GameBoard
+    , seed : Random.Seed
+    , solved : Bool
+    }
+
+
+type alias GameBoard =
     Dict Coords Cell
 
 
@@ -14,7 +22,7 @@ type alias Coords =
 
 
 type alias Cell =
-    { shape : Shape, rotations : Int }
+    { shape : Shape, initRotations : Int, rotations : Int }
 
 
 type Shape
@@ -64,8 +72,8 @@ emptyCon =
     { n = False, w = False, s = False, e = False }
 
 
-initGameState : Int -> Random.Seed -> Model
-initGameState boardSize seed0 =
+initGameState : GameState -> GameState
+initGameState ({ boardSize, seed } as gameState) =
     let
         maxCoord =
             boardSize - 1
@@ -73,63 +81,99 @@ initGameState boardSize seed0 =
         ( randomCoords, seed1 ) =
             Random.step
                 (Random.pair (Random.int 0 maxCoord) (Random.int 0 maxCoord))
-                seed0
+                seed
 
         initBoard =
             Dict.insert randomCoords emptyCon Dict.empty
 
-        finishedBoard =
-            Tuple.first <| depthFirstMazeGen randomCoords [ randomCoords ] maxCoord seed1 initBoard
+        ( finishedBoard, seed2 ) =
+            depthFirstMazeGen randomCoords [ randomCoords ] maxCoord seed1 initBoard
+
+        validBoard =
+            Dict.foldl
+                (\coords connections model -> Dict.insert coords (toCell connections) model)
+                Dict.empty
+                finishedBoard
+
+        ( scrambledBoard, seed3 ) =
+            Dict.foldl
+                (\coords cell ( boardx, seedx ) -> randomlyRotateCell coords cell boardx seedx)
+                ( validBoard, seed2 )
+                validBoard
     in
-    Dict.foldl
-        (\coords connections model -> Dict.insert coords (toCell connections) model)
-        Dict.empty
-        finishedBoard
+    { gameState | board = scrambledBoard }
+
+
+randomlyRotateCell : Coords -> Cell -> GameBoard -> Random.Seed -> ( GameBoard, Random.Seed )
+randomlyRotateCell coords cell board seed0 =
+    let
+        ( rotations, seed1 ) =
+            case cell.shape of
+                Empty ->
+                    ( 0, seed0 )
+
+                Bar ->
+                    Random.step (Random.int -1 0) seed0
+
+                _ ->
+                    Random.step (Random.int -3 0) seed0
+
+        newBoard =
+            Dict.update
+                coords
+                (Maybe.andThen
+                    (\cellToRotate ->
+                        Just { cellToRotate | rotations = rotations }
+                    )
+                )
+                board
+    in
+    ( newBoard, seed1 )
 
 
 toCell : Connections -> Cell
 toCell { n, w, s, e } =
     if n && not w && not s && not e then
-        { shape = Knob, rotations = 0 }
+        { emptyCell | shape = Knob }
 
     else if not n && not w && not s && e then
-        { shape = Knob, rotations = 1 }
+        { emptyCell | shape = Knob, initRotations = 1 }
 
     else if not n && not w && s && not e then
-        { shape = Knob, rotations = 2 }
+        { emptyCell | shape = Knob, initRotations = 2 }
 
     else if not n && w && not s && not e then
-        { shape = Knob, rotations = 3 }
+        { emptyCell | shape = Knob, initRotations = 3 }
 
     else if n && not w && not s && e then
-        { shape = Elbow, rotations = 0 }
+        { emptyCell | shape = Elbow }
 
     else if not n && not w && s && e then
-        { shape = Elbow, rotations = 1 }
+        { emptyCell | shape = Elbow, initRotations = 1 }
 
     else if not n && w && s && not e then
-        { shape = Elbow, rotations = 2 }
+        { emptyCell | shape = Elbow, initRotations = 2 }
 
     else if n && w && not s && not e then
-        { shape = Elbow, rotations = 3 }
+        { emptyCell | shape = Elbow, initRotations = 3 }
 
     else if n && not w && s && not e then
-        { shape = Bar, rotations = 0 }
+        { emptyCell | shape = Bar }
 
     else if not n && w && not s && e then
-        { shape = Bar, rotations = 1 }
+        { emptyCell | shape = Bar, initRotations = 1 }
 
     else if n && not w && s && e then
-        { shape = Tee, rotations = 0 }
+        { emptyCell | shape = Tee }
 
     else if not n && w && s && e then
-        { shape = Tee, rotations = 1 }
+        { emptyCell | shape = Tee, initRotations = 1 }
 
     else if n && w && s && not e then
-        { shape = Tee, rotations = 2 }
+        { emptyCell | shape = Tee, initRotations = 2 }
 
     else if n && w && not s && e then
-        { shape = Tee, rotations = 3 }
+        { emptyCell | shape = Tee, initRotations = 3 }
 
     else
         emptyCell
@@ -137,7 +181,7 @@ toCell { n, w, s, e } =
 
 emptyCell : Cell
 emptyCell =
-    { shape = Empty, rotations = 0 }
+    { shape = Empty, initRotations = 0, rotations = 0 }
 
 
 depthFirstMazeGen : Coords -> List Coords -> Int -> Random.Seed -> Board -> ( Board, Random.Seed )
