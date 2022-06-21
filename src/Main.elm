@@ -9,11 +9,10 @@ import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
-import Html exposing (Html)
-import Maybe exposing (andThen)
+import Maybe
 import Model exposing (Cell, Coords, Model, Shape(..), initGameState)
 import Random
-import TileSvg exposing (barSvg, borderWidth, elbowSvg, knobSvg, teeSvg, tileWidth)
+import TileSvg
 
 
 defaultBoardSize : Int
@@ -79,7 +78,7 @@ update msg ({ boardSize, board } as model) =
                 newBoard =
                     Dict.update
                         (Debug.log "coords" coords)
-                        (andThen (\cell -> Just { cell | rotations = remainderBy 4 (cell.rotations + 1) }))
+                        (Maybe.andThen (\cell -> Just { cell | rotations = remainderBy 4 (cell.rotations + 1) }))
                         board
 
                 isSolved =
@@ -157,7 +156,7 @@ gameWindow contents =
     column
         [ centerX
         , centerY
-        , Border.width borderWidth
+        , Border.width TileSvg.borderWidth
         , Border.color
             (rgb255 17 43 60)
         ]
@@ -245,11 +244,11 @@ boardRow elements =
 viewCell : Coords -> Cell -> Element Msg
 viewCell coords cell =
     el
-        [ width (px tileWidth)
-        , height (px tileWidth)
+        [ width (px TileSvg.tileWidth)
+        , height (px TileSvg.tileWidth)
         , centerX
         , centerY
-        , Border.width borderWidth
+        , Border.width TileSvg.borderWidth
         , Border.color (rgb255 17 43 60)
         , Border.rounded 6
         , Background.color (rgb255 32 83 117)
@@ -258,16 +257,16 @@ viewCell coords cell =
         ]
         (case cell.shape of
             Knob ->
-                knobSvg
+                TileSvg.knobSvg
 
             Bar ->
-                barSvg
+                TileSvg.barSvg
 
             Elbow ->
-                elbowSvg
+                TileSvg.elbowSvg
 
             Tee ->
-                teeSvg
+                TileSvg.teeSvg
 
             Empty ->
                 Element.none

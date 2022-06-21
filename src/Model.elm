@@ -1,7 +1,7 @@
 module Model exposing (..)
 
 import Dict exposing (Dict)
-import Maybe exposing (withDefault)
+import Maybe
 import Random
 
 
@@ -239,7 +239,7 @@ depthFirstMazeGen (( x, y ) as currentCoords) searchPoints maxCoord seed0 board 
             numberOfVisitable == 0
 
         { n, w, s, e } =
-            withDefault emptyCon (Dict.get currentCoords board)
+            Maybe.withDefault emptyCon (Dict.get currentCoords board)
 
         numberOfConnections =
             List.foldr
