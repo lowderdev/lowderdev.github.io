@@ -11,7 +11,7 @@ import Element.Input as Input
 import Element.Region as Region
 import Html exposing (Html)
 import Maybe exposing (andThen)
-import Model exposing (Cell, Coords, GameState, Shape(..), initGameState)
+import Model exposing (Cell, Coords, Model, Shape(..), initGameState)
 import Random
 import TileSvg exposing (barSvg, borderWidth, elbowSvg, knobSvg, teeSvg, tileWidth)
 
@@ -21,7 +21,7 @@ defaultBoardSize =
     4
 
 
-main : Program () GameState Msg
+main : Program Int Model Msg
 main =
     Browser.element
         { init = init
@@ -31,19 +31,19 @@ main =
         }
 
 
-init : () -> ( GameState, Cmd Msg )
-init _ =
+init : Int -> ( Model, Cmd Msg )
+init int =
     ( initGameState
         { boardSize = defaultBoardSize
         , board = Dict.empty
-        , seed = Random.initialSeed 1
+        , seed = Random.initialSeed int
         , solved = False
         }
-    , generateSeed
+    , Cmd.none
     )
 
 
-subscriptions : GameState -> Sub Msg
+subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
 
@@ -62,17 +62,17 @@ generateSeed =
     Random.generate NewSeed (Random.int Random.minInt Random.maxInt)
 
 
-update : Msg -> GameState -> ( GameState, Cmd Msg )
-update msg ({ boardSize, board } as gameState) =
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg ({ boardSize, board } as model) =
     case msg of
         Reset ->
-            ( gameState, Cmd.none )
+            ( model, Cmd.none )
 
         GenerateSeed ->
-            ( gameState, generateSeed )
+            ( model, generateSeed )
 
         NewSeed int ->
-            ( initGameState { gameState | seed = Random.initialSeed int }, Cmd.none )
+            ( initGameState { model | seed = Random.initialSeed int }, Cmd.none )
 
         RotateTile coords ->
             let
@@ -88,7 +88,7 @@ update msg ({ boardSize, board } as gameState) =
                             (\x -> x == 0)
                             (Debug.log "board" (List.map (\{ rotations } -> rotations) (Dict.values newBoard)))
             in
-            ( { gameState | board = newBoard, solved = isSolved }, Cmd.none )
+            ( { model | board = newBoard, solved = isSolved }, Cmd.none )
 
         DecSize ->
             let
@@ -98,7 +98,7 @@ update msg ({ boardSize, board } as gameState) =
                 newBoardSize =
                     max minSize (boardSize - 1)
             in
-            ( initGameState { gameState | boardSize = newBoardSize }, generateSeed )
+            ( initGameState { model | boardSize = newBoardSize }, generateSeed )
 
         IncSize ->
             let
@@ -108,11 +108,11 @@ update msg ({ boardSize, board } as gameState) =
                 newBoardSize =
                     min (boardSize + 1) maxSize
             in
-            ( initGameState { gameState | boardSize = newBoardSize }, generateSeed )
+            ( initGameState { model | boardSize = newBoardSize }, generateSeed )
 
 
-view : GameState -> Html Msg
-view ({ board } as gameState) =
+view : Model -> Html Msg
+view ({ board } as model) =
     let
         widthHeight =
             round <| sqrt <| toFloat <| Dict.size <| board
@@ -125,7 +125,7 @@ view ({ board } as gameState) =
     in
     layout []
         (body
-            [ gameWindowHeader gameState
+            [ gameWindowHeader model
             , gameWindow (List.map (\x -> boardRow x) rows)
             ]
         )
@@ -160,20 +160,20 @@ gameWindow contents =
         contents
 
 
-gameWindowHeader : GameState -> Element Msg
-gameWindowHeader gameState =
+gameWindowHeader : Model -> Element Msg
+gameWindowHeader model =
     row [ width fill, height (px 80), spacing 4, padding 50 ]
         [ paragraph []
             [ text
-                (if gameState.solved then
+                (if model.solved then
                     "Solved!"
 
                  else
                     ""
                 )
             ]
-        , decSizeButton gameState
-        , incSizeButton gameState
+        , decSizeButton model
+        , incSizeButton model
         , Input.button
             [ width (px 40)
             , Font.center
@@ -185,9 +185,9 @@ gameWindowHeader gameState =
         ]
 
 
-decSizeButton : GameState -> Element Msg
-decSizeButton gameState =
-    if gameState.boardSize <= 3 then
+decSizeButton : Model -> Element Msg
+decSizeButton model =
+    if model.boardSize <= 3 then
         Input.button
             [ width (px 40)
             , Font.center
@@ -209,9 +209,9 @@ decSizeButton gameState =
             { onPress = Just DecSize, label = text "-" }
 
 
-incSizeButton : GameState -> Element Msg
-incSizeButton gameState =
-    if gameState.boardSize >= 10 then
+incSizeButton : Model -> Element Msg
+incSizeButton model =
+    if model.boardSize >= 10 then
         Input.button
             [ width (px 40)
             , Font.center

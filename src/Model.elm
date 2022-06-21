@@ -5,7 +5,7 @@ import Maybe exposing (withDefault)
 import Random
 
 
-type alias GameState =
+type alias Model =
     { boardSize : Int
     , board : GameBoard
     , seed : Random.Seed
@@ -72,8 +72,8 @@ emptyCon =
     { n = False, w = False, s = False, e = False }
 
 
-initGameState : GameState -> GameState
-initGameState ({ boardSize, seed } as gameState) =
+initGameState : Model -> Model
+initGameState ({ boardSize, seed } as model) =
     let
         maxCoord =
             boardSize - 1
@@ -91,7 +91,7 @@ initGameState ({ boardSize, seed } as gameState) =
 
         validBoard =
             Dict.foldl
-                (\coords connections model -> Dict.insert coords (toCell connections) model)
+                (\coords connections board -> Dict.insert coords (toCell connections) board)
                 Dict.empty
                 finishedBoard
 
@@ -101,7 +101,7 @@ initGameState ({ boardSize, seed } as gameState) =
                 ( validBoard, seed2 )
                 validBoard
     in
-    { gameState | board = scrambledBoard }
+    { model | board = scrambledBoard }
 
 
 randomlyRotateCell : Coords -> Cell -> GameBoard -> Random.Seed -> ( GameBoard, Random.Seed )
