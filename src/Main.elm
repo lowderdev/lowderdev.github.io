@@ -23,7 +23,7 @@ defaultBoardSize =
 
 main : Program Int Model Msg
 main =
-    Browser.element
+    Browser.document
         { init = init
         , subscriptions = subscriptions
         , update = update
@@ -111,7 +111,7 @@ update msg ({ boardSize, board } as model) =
             ( initGameState { model | boardSize = newBoardSize }, generateSeed )
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view ({ board } as model) =
     let
         widthHeight =
@@ -123,12 +123,16 @@ view ({ board } as model) =
         rows =
             split widthHeight tiles
     in
-    layout []
-        (body
-            [ gameWindowHeader model
-            , gameWindow (List.map (\x -> boardRow x) rows)
-            ]
-        )
+    { title = "Graph Bang"
+    , body =
+        [ layout []
+            (body
+                [ gameWindowHeader model
+                , gameWindow (List.map (\x -> boardRow x) rows)
+                ]
+            )
+        ]
+    }
 
 
 split : Int -> List a -> List (List a)

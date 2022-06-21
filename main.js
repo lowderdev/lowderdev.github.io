@@ -10581,7 +10581,7 @@ var $elm$core$Basics$never = function (_v0) {
 		continue never;
 	}
 };
-var $elm$browser$Browser$element = _Browser_element;
+var $elm$browser$Browser$document = _Browser_document;
 var $author$project$Main$defaultBoardSize = 4;
 var $author$project$Model$E = {$: 'E'};
 var $author$project$Model$N = {$: 'N'};
@@ -17684,22 +17684,28 @@ var $author$project$Main$view = function (model) {
 		_List_Nil,
 		board);
 	var rows = A2($author$project$Main$split, widthHeight, tiles);
-	return A2(
-		$mdgriffith$elm_ui$Element$layout,
-		_List_Nil,
-		$author$project$Main$body(
-			_List_fromArray(
-				[
-					$author$project$Main$gameWindowHeader(model),
-					$author$project$Main$gameWindow(
-					A2(
-						$elm$core$List$map,
-						function (x) {
-							return $author$project$Main$boardRow(x);
-						},
-						rows))
-				])));
+	return {
+		body: _List_fromArray(
+			[
+				A2(
+				$mdgriffith$elm_ui$Element$layout,
+				_List_Nil,
+				$author$project$Main$body(
+					_List_fromArray(
+						[
+							$author$project$Main$gameWindowHeader(model),
+							$author$project$Main$gameWindow(
+							A2(
+								$elm$core$List$map,
+								function (x) {
+									return $author$project$Main$boardRow(x);
+								},
+								rows))
+						])))
+			]),
+		title: 'Graph Bang'
+	};
 };
-var $author$project$Main$main = $elm$browser$Browser$element(
+var $author$project$Main$main = $elm$browser$Browser$document(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$int)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Model.Coords":{"args":[],"type":"( Basics.Int, Basics.Int )"}},"unions":{"Main.Msg":{"args":[],"tags":{"Reset":[],"GenerateSeed":[],"NewSeed":["Basics.Int"],"RotateTile":["Model.Coords"],"DecSize":[],"IncSize":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});}(this));
