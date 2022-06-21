@@ -77,15 +77,14 @@ update msg ({ boardSize, board } as model) =
             let
                 newBoard =
                     Dict.update
-                        (Debug.log "coords" coords)
+                        coords
                         (Maybe.andThen (\cell -> Just { cell | rotations = remainderBy 4 (cell.rotations + 1) }))
                         board
 
                 isSolved =
-                    Debug.log "solved" <|
-                        List.all
-                            (\x -> x == 0)
-                            (Debug.log "board" (List.map (\{ rotations } -> rotations) (Dict.values newBoard)))
+                    List.all
+                        (\x -> x == 0)
+                        (List.map (\{ rotations } -> rotations) (Dict.values newBoard))
             in
             ( { model | board = newBoard, solved = isSolved }, Cmd.none )
 

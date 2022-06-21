@@ -1,6 +1,5 @@
 module TileSvg exposing (..)
 
-import Debug exposing (toString)
 import Element exposing (Element, html)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -38,12 +37,12 @@ borderWidth =
 
 halfWidthS : String
 halfWidthS =
-    toString (tileInnerWidth // 2)
+    String.fromInt <| tileInnerWidth // 2
 
 
 tileInnerWidthS : String
 tileInnerWidthS =
-    toString tileInnerWidth
+    String.fromInt tileInnerWidth
 
 
 tileWidth : Int
@@ -53,7 +52,7 @@ tileWidth =
 
 strokeWidthS : String
 strokeWidthS =
-    toString strokeWidth
+    String.fromInt strokeWidth
 
 
 strokeWidthOffset : Int
@@ -63,7 +62,7 @@ strokeWidthOffset =
 
 centerStrokeS : String
 centerStrokeS =
-    toString ((tileInnerWidth // 2) - strokeWidthOffset)
+    String.fromInt ((tileInnerWidth // 2) - strokeWidthOffset)
 
 
 tileViewBox : Attribute msg
@@ -77,7 +76,7 @@ knobSvg =
         [ circle
             [ cx halfWidthS
             , cy halfWidthS
-            , r (toString (toFloat strokeWidth * 0.8))
+            , r (String.fromFloat (toFloat strokeWidth * 0.8))
             , fill "currentcolor"
             ]
             []
@@ -114,7 +113,7 @@ elbowSvg =
         , circle
             [ cx halfWidthS
             , cy halfWidthS
-            , r (toString strokeWidthOffset)
+            , r (String.fromInt strokeWidthOffset)
             , fill "currentcolor"
             ]
             []
