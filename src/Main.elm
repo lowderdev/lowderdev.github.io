@@ -160,7 +160,7 @@ view ({ board } as model) =
     { title = "Graph Bang"
     , body =
         [ layout []
-            (body
+            (viewBody
                 [ gameWindowHeader model
                 , gameWindow (List.map (\x -> boardRow x) rows)
                 ]
@@ -179,8 +179,8 @@ split toTake list =
             List.take toTake list :: split toTake (List.drop toTake list)
 
 
-body : List (Element msg) -> Element msg
-body contents =
+viewBody : List (Element msg) -> Element msg
+viewBody contents =
     column
         [ width fill, height fill, Background.color darkBlue, Font.color white ]
         contents
@@ -190,36 +190,48 @@ gameWindow : List (Element Msg) -> Element Msg
 gameWindow contents =
     column
         [ centerX
-        , centerY
+        , padding 40
         , Border.width TileSvg.borderWidth
-        , Border.color
-            darkBlue
+        , Border.color darkBlue
         ]
         contents
 
 
 gameWindowHeader : Model -> Element Msg
 gameWindowHeader model =
-    row [ width fill, height (px 80), spacing 4, padding 50 ]
-        [ paragraph []
-            [ text
-                (if model.solved then
-                    "Solved!"
+    row [ width fill, height (px 80), padding 60 ]
+        [ row [ width (fillPortion 1), spacing 4 ]
+            [ Input.button
+                [ width shrink
+                , height (px 60)
+                , Font.center
+                , padding 10
+                , Border.rounded 6
+                , Background.color lightBlue
+                ]
+                { onPress = Just GenerateSeed, label = text "New" }
+            , decSizeButton model
+            , incSizeButton model
+            ]
+        , el [ width (fillPortion 1), Font.center ]
+            (if model.solved then
+                row [ centerX ]
+                    [ paragraph [ padding 40, Font.size 40 ] [ text "🎉 🥳 🎉" ]
+                    , Input.button
+                        [ width (px 140)
+                        , height (px 60)
+                        , centerX
+                        , Font.center
+                        , Border.rounded 6
+                        , Background.color lightBlue
+                        ]
+                        { onPress = Just GenerateSeed, label = text "Play Again" }
+                    ]
 
-                 else
-                    ""
-                )
-            ]
-        , decSizeButton model
-        , incSizeButton model
-        , Input.button
-            [ width (px 40)
-            , Font.center
-            , padding 10
-            , Border.rounded 6
-            , Background.color lightBlue
-            ]
-            { onPress = Just GenerateSeed, label = text "🔄" }
+             else
+                Element.none
+            )
+        , el [ width (fillPortion 1) ] Element.none
         ]
 
 
@@ -227,7 +239,8 @@ decSizeButton : Model -> Element Msg
 decSizeButton model =
     if model.boardSize <= minBoardSize then
         Input.button
-            [ width (px 40)
+            [ width (px 60)
+            , height (px 60)
             , Font.center
             , padding 10
             , Border.rounded 6
@@ -238,7 +251,8 @@ decSizeButton model =
 
     else
         Input.button
-            [ width (px 40)
+            [ width (px 60)
+            , height (px 60)
             , Font.center
             , padding 10
             , Border.rounded 6
@@ -251,7 +265,8 @@ incSizeButton : Model -> Element Msg
 incSizeButton model =
     if model.boardSize >= maxBoardSize then
         Input.button
-            [ width (px 40)
+            [ width (px 60)
+            , height (px 60)
             , Font.center
             , padding 10
             , Border.rounded 6
@@ -262,7 +277,8 @@ incSizeButton model =
 
     else
         Input.button
-            [ width (px 40)
+            [ width (px 60)
+            , height (px 60)
             , Font.center
             , padding 10
             , Border.rounded 6
