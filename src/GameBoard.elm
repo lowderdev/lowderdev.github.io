@@ -1,16 +1,8 @@
-module Model exposing (..)
+module GameBoard exposing (..)
 
 import Dict exposing (Dict)
 import Maybe
 import Random
-
-
-type alias Model =
-    { boardSize : Int
-    , board : GameBoard
-    , seed : Random.Seed
-    , solved : Bool
-    }
 
 
 type alias GameBoard =
@@ -72,8 +64,8 @@ emptyCon =
     { n = False, w = False, s = False, e = False }
 
 
-initGameState : Model -> Model
-initGameState ({ boardSize, seed } as model) =
+initGameBoard : Int -> Random.Seed -> ( GameBoard, Random.Seed )
+initGameBoard boardSize seed0 =
     let
         maxCoord =
             boardSize - 1
@@ -81,7 +73,7 @@ initGameState ({ boardSize, seed } as model) =
         ( randomCoords, seed1 ) =
             Random.step
                 (Random.pair (Random.int 0 maxCoord) (Random.int 0 maxCoord))
-                seed
+                seed0
 
         initBoard =
             Dict.insert randomCoords emptyCon Dict.empty
@@ -101,7 +93,7 @@ initGameState ({ boardSize, seed } as model) =
                 ( validBoard, seed2 )
                 validBoard
     in
-    { model | board = scrambledBoard }
+    ( scrambledBoard, seed3 )
 
 
 randomlyRotateCell : Coords -> Cell -> GameBoard -> Random.Seed -> ( GameBoard, Random.Seed )
@@ -129,6 +121,26 @@ randomlyRotateCell coords cell board seed0 =
                 board
     in
     ( newBoard, seed1 )
+
+
+rotateCell : Coords -> GameBoard -> GameBoard
+rotateCell coords board =
+    Dict.update
+        coords
+        (Maybe.andThen
+            (\cell ->
+                case cell.shape of
+                    Empty ->
+                        Just cell
+
+                    Bar ->
+                        Just { cell | rotations = remainderBy 2 (cell.rotations + 1) }
+
+                    _ ->
+                        Just { cell | rotations = remainderBy 4 (cell.rotations + 1) }
+            )
+        )
+        board
 
 
 toCell : Connections -> Cell

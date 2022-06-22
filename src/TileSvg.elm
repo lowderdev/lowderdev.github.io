@@ -1,7 +1,14 @@
-module TileSvg exposing (..)
+module TileSvg exposing
+    ( barSvg
+    , borderWidth
+    , elbowSvg
+    , knobSvg
+    , teeSvg
+    , tileWidth
+    )
 
 import Element exposing (Element, html)
-import Svg exposing (..)
+import Svg exposing (Svg)
 import Svg.Attributes exposing (..)
 
 
@@ -17,7 +24,7 @@ import Svg.Attributes exposing (..)
 
 tileInnerWidth : Int
 tileInnerWidth =
-    100
+    120
 
 
 strokeWidth : Int
@@ -25,7 +32,7 @@ strokeWidth =
     40
 
 
-strokeColor : Attribute msg
+strokeColor : Svg.Attribute msg
 strokeColor =
     color "rgba(255, 255, 255, 255)"
 
@@ -65,7 +72,7 @@ centerStrokeS =
     String.fromInt ((tileInnerWidth // 2) - strokeWidthOffset)
 
 
-tileViewBox : Attribute msg
+tileViewBox : Svg.Attribute msg
 tileViewBox =
     viewBox ("0 0 " ++ tileInnerWidthS ++ " " ++ tileInnerWidthS)
 
@@ -73,14 +80,14 @@ tileViewBox =
 knobSvg : Element msg
 knobSvg =
     styledSvg
-        [ circle
+        [ Svg.circle
             [ cx halfWidthS
             , cy halfWidthS
             , r (String.fromFloat (toFloat strokeWidth * 0.8))
             , fill "currentcolor"
             ]
             []
-        , rect
+        , Svg.rect
             [ x centerStrokeS
             , y "0"
             , width strokeWidthS
@@ -94,7 +101,7 @@ knobSvg =
 elbowSvg : Element msg
 elbowSvg =
     styledSvg
-        [ rect
+        [ Svg.rect
             [ x centerStrokeS
             , y "0"
             , width strokeWidthS
@@ -102,7 +109,7 @@ elbowSvg =
             , fill "currentcolor"
             ]
             []
-        , rect
+        , Svg.rect
             [ x halfWidthS
             , y centerStrokeS
             , width halfWidthS
@@ -110,7 +117,7 @@ elbowSvg =
             , fill "currentcolor"
             ]
             []
-        , circle
+        , Svg.circle
             [ cx halfWidthS
             , cy halfWidthS
             , r (String.fromInt strokeWidthOffset)
@@ -123,7 +130,7 @@ elbowSvg =
 barSvg : Element msg
 barSvg =
     styledSvg
-        [ rect
+        [ Svg.rect
             [ x centerStrokeS
             , y "0"
             , width strokeWidthS
@@ -137,7 +144,7 @@ barSvg =
 teeSvg : Element msg
 teeSvg =
     styledSvg
-        [ rect
+        [ Svg.rect
             [ x centerStrokeS
             , y "0"
             , width strokeWidthS
@@ -145,7 +152,7 @@ teeSvg =
             , fill "currentcolor"
             ]
             []
-        , rect
+        , Svg.rect
             [ x halfWidthS
             , y centerStrokeS
             , width halfWidthS
