@@ -12626,6 +12626,8 @@ var $mdgriffith$elm_ui$Internal$Model$Label = function (a) {
 	return {$: 5, a: a};
 };
 var $mdgriffith$elm_ui$Element$Region$description = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Describe, $mdgriffith$elm_ui$Internal$Model$Label);
+var $author$project$Main$grey = A3($mdgriffith$elm_ui$Element$rgb255, 150, 150, 150);
+var $mdgriffith$elm_ui$Element$htmlAttribute = $mdgriffith$elm_ui$Internal$Model$Attr;
 var $author$project$Main$lightBlue = A3($mdgriffith$elm_ui$Element$rgb255, 32, 83, 117);
 var $mdgriffith$elm_ui$Internal$Model$Px = function (a) {
 	return {$: 0, a: a};
@@ -12642,6 +12644,8 @@ var $mdgriffith$elm_ui$Element$Border$rounded = function (radius) {
 			'border-radius',
 			$elm$core$String$fromInt(radius) + 'px'));
 };
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $mdgriffith$elm_ui$Internal$Model$Text = function (a) {
 	return {$: 2, a: a};
 };
@@ -12660,7 +12664,9 @@ var $author$project$Main$decSizeButton = function (model) {
 				$mdgriffith$elm_ui$Element$Font$center,
 				$mdgriffith$elm_ui$Element$padding(10),
 				$mdgriffith$elm_ui$Element$Border$rounded(6),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue),
+				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$grey),
+				$mdgriffith$elm_ui$Element$htmlAttribute(
+				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation')),
 				$mdgriffith$elm_ui$Element$Region$description('board at min size')
 			]),
 		{
@@ -12677,7 +12683,9 @@ var $author$project$Main$decSizeButton = function (model) {
 				$mdgriffith$elm_ui$Element$Font$center,
 				$mdgriffith$elm_ui$Element$padding(10),
 				$mdgriffith$elm_ui$Element$Border$rounded(6),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue)
+				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue),
+				$mdgriffith$elm_ui$Element$htmlAttribute(
+				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation'))
 			]),
 		{
 			aL: $mdgriffith$elm_ui$Element$text('-'),
@@ -12719,7 +12727,9 @@ var $author$project$Main$incSizeButton = function (model) {
 				$mdgriffith$elm_ui$Element$Font$center,
 				$mdgriffith$elm_ui$Element$padding(10),
 				$mdgriffith$elm_ui$Element$Border$rounded(6),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue),
+				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$grey),
+				$mdgriffith$elm_ui$Element$htmlAttribute(
+				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation')),
 				$mdgriffith$elm_ui$Element$Region$description('board at max size')
 			]),
 		{
@@ -12736,7 +12746,9 @@ var $author$project$Main$incSizeButton = function (model) {
 				$mdgriffith$elm_ui$Element$Font$center,
 				$mdgriffith$elm_ui$Element$padding(10),
 				$mdgriffith$elm_ui$Element$Border$rounded(6),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue)
+				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue),
+				$mdgriffith$elm_ui$Element$htmlAttribute(
+				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation'))
 			]),
 		{
 			aL: $mdgriffith$elm_ui$Element$text('+'),
@@ -12806,7 +12818,9 @@ var $author$project$Main$gameWindowHeader = function (model) {
 								$mdgriffith$elm_ui$Element$Font$center,
 								$mdgriffith$elm_ui$Element$padding(10),
 								$mdgriffith$elm_ui$Element$Border$rounded(6),
-								$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue)
+								$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue),
+								$mdgriffith$elm_ui$Element$htmlAttribute(
+								A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation'))
 							]),
 						{
 							aL: $mdgriffith$elm_ui$Element$text('New'),
@@ -13396,6 +13410,8 @@ var $author$project$Main$viewCell = F3(
 					$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue),
 					$mdgriffith$elm_ui$Element$rotate(
 					$elm$core$Basics$degrees((cell.y + cell.at) * 90)),
+					$mdgriffith$elm_ui$Element$htmlAttribute(
+					A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation')),
 					$mdgriffith$elm_ui$Element$Events$onClick(
 					$author$project$Main$RotateTile(coords))
 				]),

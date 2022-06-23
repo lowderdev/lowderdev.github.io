@@ -11,6 +11,7 @@ import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
 import GameBoard exposing (GameBoard, Shape(..))
+import Html.Attributes
 import Random
 import TileSvg
 
@@ -43,6 +44,11 @@ lightBlue =
 white : Color
 white =
     rgb 1 1 1
+
+
+grey : Color
+grey =
+    rgb255 150 150 150
 
 
 roundToEven : Int -> Int
@@ -255,6 +261,7 @@ gameWindowHeader model =
                 , padding 10
                 , Border.rounded 6
                 , Background.color lightBlue
+                , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
                 ]
                 { onPress = Just GenerateSeed, label = text "New" }
             , decSizeButton model
@@ -291,7 +298,8 @@ decSizeButton model =
             , Font.center
             , padding 10
             , Border.rounded 6
-            , Background.color lightBlue
+            , Background.color grey
+            , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
             , Region.description "board at min size"
             ]
             { onPress = Nothing, label = text "-" }
@@ -304,6 +312,7 @@ decSizeButton model =
             , padding 10
             , Border.rounded 6
             , Background.color lightBlue
+            , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
             ]
             { onPress = Just DecSize, label = text "-" }
 
@@ -317,7 +326,8 @@ incSizeButton model =
             , Font.center
             , padding 10
             , Border.rounded 6
-            , Background.color lightBlue
+            , Background.color grey
+            , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
             , Region.description "board at max size"
             ]
             { onPress = Nothing, label = text "+" }
@@ -330,6 +340,7 @@ incSizeButton model =
             , padding 10
             , Border.rounded 6
             , Background.color lightBlue
+            , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
             ]
             { onPress = Just IncSize, label = text "+" }
 
@@ -355,6 +366,7 @@ viewCell tileSize coords cell =
             )
         , Background.color lightBlue
         , rotate (degrees (toFloat ((cell.initRotations + cell.rotations) * 90)))
+        , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
         , Events.onClick (RotateTile coords)
         ]
         (case cell.shape of
