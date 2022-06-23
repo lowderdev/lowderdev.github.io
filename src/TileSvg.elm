@@ -20,16 +20,15 @@ import Svg.Attributes exposing (..)
 -- Colors:
 -- navy (rgb255 6 40 61)
 -- blue (rgb255 19 99 223)
+--
+-- tileInnerWidth : Int
+-- tileInnerWidth =
+--     120
 
 
-tileInnerWidth : Int
-tileInnerWidth =
-    120
-
-
-strokeWidth : Int
-strokeWidth =
-    40
+strokeWidth : Int -> Int
+strokeWidth tileSize =
+    tileSize // 3 |> roundToEven
 
 
 strokeColor : Svg.Attribute msg
@@ -42,134 +41,139 @@ borderWidth =
     1
 
 
-halfWidthS : String
-halfWidthS =
-    String.fromInt <| tileInnerWidth // 2
+halfWidthS : Int -> String
+halfWidthS tileSize =
+    String.fromInt <| tileSize // 2
 
 
-tileInnerWidthS : String
-tileInnerWidthS =
-    String.fromInt tileInnerWidth
+tileInnerWidthS : Int -> String
+tileInnerWidthS tileSize =
+    String.fromInt tileSize
 
 
-tileWidth : Int
-tileWidth =
-    tileInnerWidth + (borderWidth * 2)
+tileWidth : Int -> Int
+tileWidth tileSize =
+    tileSize + (borderWidth * 2)
 
 
-strokeWidthS : String
-strokeWidthS =
-    String.fromInt strokeWidth
+strokeWidthS : Int -> String
+strokeWidthS tileSize =
+    String.fromInt (strokeWidth tileSize)
 
 
-strokeWidthOffset : Int
-strokeWidthOffset =
-    strokeWidth // 2
+strokeWidthOffset : Int -> Int
+strokeWidthOffset tileSize =
+    strokeWidth tileSize // 2
 
 
-centerStrokeS : String
-centerStrokeS =
-    String.fromInt ((tileInnerWidth // 2) - strokeWidthOffset)
+centerStrokeS : Int -> String
+centerStrokeS tileSize =
+    String.fromInt ((tileSize // 2) - strokeWidthOffset tileSize)
 
 
-tileViewBox : Svg.Attribute msg
-tileViewBox =
-    viewBox ("0 0 " ++ tileInnerWidthS ++ " " ++ tileInnerWidthS)
+roundToEven : Int -> Int
+roundToEven int =
+    2 * (int // 2)
 
 
-knobSvg : Element msg
-knobSvg =
-    styledSvg
+tileViewBox : Int -> Svg.Attribute msg
+tileViewBox tileSize =
+    viewBox ("0 0 " ++ tileInnerWidthS tileSize ++ " " ++ tileInnerWidthS tileSize)
+
+
+knobSvg : Int -> Element msg
+knobSvg tileSize =
+    styledSvg tileSize
         [ Svg.circle
-            [ cx halfWidthS
-            , cy halfWidthS
-            , r (String.fromFloat (toFloat strokeWidth * 0.8))
+            [ cx (halfWidthS tileSize)
+            , cy (halfWidthS tileSize)
+            , r (String.fromFloat (toFloat (strokeWidth tileSize) * 0.8))
             , fill "currentcolor"
             ]
             []
         , Svg.rect
-            [ x centerStrokeS
+            [ x (centerStrokeS tileSize)
             , y "0"
-            , width strokeWidthS
-            , height halfWidthS
+            , width (strokeWidthS tileSize)
+            , height (halfWidthS tileSize)
             , fill "currentcolor"
             ]
             []
         ]
 
 
-elbowSvg : Element msg
-elbowSvg =
-    styledSvg
+elbowSvg : Int -> Element msg
+elbowSvg tileSize =
+    styledSvg tileSize
         [ Svg.rect
-            [ x centerStrokeS
+            [ x (centerStrokeS tileSize)
             , y "0"
-            , width strokeWidthS
-            , height halfWidthS
+            , width (strokeWidthS tileSize)
+            , height (halfWidthS tileSize)
             , fill "currentcolor"
             ]
             []
         , Svg.rect
-            [ x halfWidthS
-            , y centerStrokeS
-            , width halfWidthS
-            , height strokeWidthS
+            [ x (halfWidthS tileSize)
+            , y (centerStrokeS tileSize)
+            , width (halfWidthS tileSize)
+            , height (strokeWidthS tileSize)
             , fill "currentcolor"
             ]
             []
         , Svg.circle
-            [ cx halfWidthS
-            , cy halfWidthS
-            , r (String.fromInt strokeWidthOffset)
+            [ cx (halfWidthS tileSize)
+            , cy (halfWidthS tileSize)
+            , r (String.fromInt (strokeWidthOffset tileSize))
             , fill "currentcolor"
             ]
             []
         ]
 
 
-barSvg : Element msg
-barSvg =
-    styledSvg
+barSvg : Int -> Element msg
+barSvg tileSize =
+    styledSvg tileSize
         [ Svg.rect
-            [ x centerStrokeS
+            [ x (centerStrokeS tileSize)
             , y "0"
-            , width strokeWidthS
-            , height tileInnerWidthS
+            , width (strokeWidthS tileSize)
+            , height (tileInnerWidthS tileSize)
             , fill "currentcolor"
             ]
             []
         ]
 
 
-teeSvg : Element msg
-teeSvg =
-    styledSvg
+teeSvg : Int -> Element msg
+teeSvg tileSize =
+    styledSvg tileSize
         [ Svg.rect
-            [ x centerStrokeS
+            [ x (centerStrokeS tileSize)
             , y "0"
-            , width strokeWidthS
-            , height tileInnerWidthS
+            , width (strokeWidthS tileSize)
+            , height (tileInnerWidthS tileSize)
             , fill "currentcolor"
             ]
             []
         , Svg.rect
-            [ x halfWidthS
-            , y centerStrokeS
-            , width halfWidthS
-            , height strokeWidthS
+            [ x (halfWidthS tileSize)
+            , y (centerStrokeS tileSize)
+            , width (halfWidthS tileSize)
+            , height (strokeWidthS tileSize)
             , fill "currentcolor"
             ]
             []
         ]
 
 
-styledSvg : List (Svg msg) -> Element msg
-styledSvg elements =
+styledSvg : Int -> List (Svg msg) -> Element msg
+styledSvg tileSize elements =
     html <|
         Svg.svg
-            [ width tileInnerWidthS
-            , height tileInnerWidthS
-            , tileViewBox
+            [ width (tileInnerWidthS tileSize)
+            , height (tileInnerWidthS tileSize)
+            , tileViewBox tileSize
             , strokeColor
             ]
             elements

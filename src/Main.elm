@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Events
 import Dict
 import Element exposing (..)
 import Element.Background as Background
@@ -44,7 +45,25 @@ white =
     rgb 1 1 1
 
 
-main : Program Int Model Msg
+roundToEven : Int -> Int
+roundToEven int =
+    2 * (int // 2)
+
+
+getTileSize : Int -> Int -> Int
+getTileSize windowWidth boardSize =
+    let
+        gameWindowWidth =
+            (toFloat windowWidth * 0.8) |> round |> roundToEven
+    in
+    gameWindowWidth // boardSize |> roundToEven
+
+
+type alias Flags =
+    { number : Int, windowWidth : Int }
+
+
+main : Program Flags Model Msg
 main =
     Browser.document
         { init = init
@@ -59,19 +78,23 @@ type alias Model =
     , board : GameBoard
     , seed : Random.Seed
     , solved : Bool
+    , windowWidth : Int
+    , tileSize : Int
     }
 
 
-init : Int -> ( Model, Cmd Msg )
-init int =
+init : Flags -> ( Model, Cmd Msg )
+init { number, windowWidth } =
     let
         ( board, seed ) =
-            GameBoard.initGameBoard defaultBoardSize (Random.initialSeed int)
+            GameBoard.initGameBoard defaultBoardSize (Random.initialSeed number)
     in
     ( { boardSize = defaultBoardSize
       , board = board
       , seed = seed
       , solved = False
+      , windowWidth = windowWidth
+      , tileSize = getTileSize windowWidth defaultBoardSize
       }
     , Cmd.none
     )
@@ -79,11 +102,12 @@ init int =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Browser.Events.onResize (\width _ -> GotResize width)
 
 
 type Msg
-    = GenerateSeed
+    = GotResize Int
+    | GenerateSeed
     | NewSeed Int
     | RotateTile GameBoard.Coords
     | DecSize
@@ -98,6 +122,9 @@ generateSeed =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        GotResize windowWidth ->
+            ( { model | windowWidth = windowWidth, tileSize = getTileSize windowWidth model.boardSize }, Cmd.none )
+
         GenerateSeed ->
             ( model, generateSeed )
 
@@ -132,7 +159,15 @@ update msg model =
                 ( newBoard, newSeed ) =
                     GameBoard.initGameBoard newBoardSize model.seed
             in
-            ( { model | boardSize = newBoardSize, board = newBoard, seed = newSeed, solved = False }, Cmd.none )
+            ( { model
+                | boardSize = newBoardSize
+                , board = newBoard
+                , seed = newSeed
+                , solved = False
+                , tileSize = getTileSize model.windowWidth newBoardSize
+              }
+            , Cmd.none
+            )
 
         IncSize ->
             let
@@ -142,27 +177,29 @@ update msg model =
                 ( newBoard, newSeed ) =
                     GameBoard.initGameBoard newBoardSize model.seed
             in
-            ( { model | boardSize = newBoardSize, board = newBoard, seed = newSeed, solved = False }, Cmd.none )
+            ( { model
+                | boardSize = newBoardSize
+                , board = newBoard
+                , seed = newSeed
+                , solved = False
+                , tileSize = getTileSize model.windowWidth newBoardSize
+              }
+            , Cmd.none
+            )
 
 
 view : Model -> Browser.Document Msg
-view ({ board } as model) =
+view ({ board, boardSize, tileSize } as model) =
     let
-        widthHeight =
-            round <| sqrt <| toFloat <| Dict.size <| board
-
         tiles =
-            Dict.foldr (\k v acc -> viewCell k v :: acc) [] board
-
-        rows =
-            split widthHeight tiles
+            Dict.foldr (\k v acc -> viewCell tileSize k v :: acc) [] board
     in
     { title = "Graph Bang"
     , body =
         [ layout []
             (viewBody
                 [ gameWindowHeader model
-                , gameWindow (List.map (\x -> boardRow x) rows)
+                , gameWindow boardSize tiles
                 ]
             )
         ]
@@ -186,15 +223,22 @@ viewBody contents =
         contents
 
 
-gameWindow : List (Element Msg) -> Element Msg
-gameWindow contents =
+gameWindow : Int -> List (Element Msg) -> Element Msg
+gameWindow boardSize tiles =
+    let
+        rows =
+            split boardSize tiles
+
+        renderedRows =
+            List.map (\x -> boardRow x) rows
+    in
     column
         [ centerX
         , padding 40
         , Border.width TileSvg.borderWidth
         , Border.color darkBlue
         ]
-        contents
+        renderedRows
 
 
 gameWindowHeader : Model -> Element Msg
@@ -216,7 +260,7 @@ gameWindowHeader model =
         , el [ width (fillPortion 1), Font.center ]
             (if model.solved then
                 row [ centerX ]
-                    [ paragraph [ padding 40, Font.size 40 ] [ text "🎉 🥳 🎉" ]
+                    [ el [ padding 40, Font.center, Font.size 40 ] (text "🎉 🥳 🎉")
                     , Input.button
                         [ width (px 140)
                         , height (px 60)
@@ -292,8 +336,8 @@ boardRow elements =
     row [ centerX, centerY ] elements
 
 
-viewCell : GameBoard.Coords -> GameBoard.Cell -> Element Msg
-viewCell coords cell =
+viewCell : Int -> GameBoard.Coords -> GameBoard.Cell -> Element Msg
+viewCell tileSize coords cell =
     el
         [ centerX
         , centerY
@@ -306,16 +350,16 @@ viewCell coords cell =
         ]
         (case cell.shape of
             Knob ->
-                TileSvg.knobSvg
+                TileSvg.knobSvg tileSize
 
             Bar ->
-                TileSvg.barSvg
+                TileSvg.barSvg tileSize
 
             Elbow ->
-                TileSvg.elbowSvg
+                TileSvg.elbowSvg tileSize
 
             Tee ->
-                TileSvg.teeSvg
+                TileSvg.teeSvg tileSize
 
             Empty ->
                 Element.none

@@ -1,6 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="user-scalable=no">
   <title>Graph Bang</title>
   <script src="main.js"></script>
 </head>
@@ -10,7 +11,10 @@
   <script>
   var app = Elm.Main.init({
     node: document.getElementById('myapp'),
-    flags: Date.now()
+    flags: {
+      number: Date.now(),
+      windowWidth: window.innerWidth
+    }
   });
   </script>
 </body>
