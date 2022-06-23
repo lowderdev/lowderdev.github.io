@@ -5224,6 +5224,10 @@ var $elm$core$Task$perform = F2(
 var $elm$browser$Browser$document = _Browser_document;
 var $elm$json$Json$Decode$field = _Json_decodeField;
 var $author$project$Main$defaultBoardSize = 4;
+var $elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
+	});
 var $elm$core$Basics$round = _Basics_round;
 var $author$project$Main$roundToEven = function (_int) {
 	return 2 * ((_int / 2) | 0);
@@ -5232,7 +5236,8 @@ var $author$project$Main$getTileSize = F2(
 	function (windowWidth, boardSize) {
 		var gameWindowWidth = $author$project$Main$roundToEven(
 			$elm$core$Basics$round(windowWidth * 0.8));
-		return $author$project$Main$roundToEven((gameWindowWidth / boardSize) | 0);
+		var widthPerTile = $author$project$Main$roundToEven((gameWindowWidth / boardSize) | 0);
+		return A2($elm$core$Basics$min, widthPerTile, 140);
 	});
 var $author$project$GameBoard$E = 3;
 var $author$project$GameBoard$N = 0;
@@ -6647,10 +6652,6 @@ var $author$project$Main$generateSeed = A2(
 	$author$project$Main$NewSeed,
 	A2($elm$random$Random$int, $elm$random$Random$minInt, $elm$random$Random$maxInt));
 var $author$project$Main$maxBoardSize = 12;
-var $elm$core$Basics$min = F2(
-	function (x, y) {
-		return (_Utils_cmp(x, y) < 0) ? x : y;
-	});
 var $author$project$Main$minBoardSize = 3;
 var $author$project$GameBoard$rotateCell = F2(
 	function (coords, board) {
@@ -13390,7 +13391,8 @@ var $author$project$Main$viewCell = F3(
 					$mdgriffith$elm_ui$Element$centerY,
 					$mdgriffith$elm_ui$Element$Border$width($author$project$TileSvg$borderWidth),
 					$mdgriffith$elm_ui$Element$Border$color($author$project$Main$darkBlue),
-					$mdgriffith$elm_ui$Element$Border$rounded(6),
+					$mdgriffith$elm_ui$Element$Border$rounded(
+					(tileSize < 80) ? 2 : 6),
 					$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue),
 					$mdgriffith$elm_ui$Element$rotate(
 					$elm$core$Basics$degrees((cell.y + cell.at) * 90)),

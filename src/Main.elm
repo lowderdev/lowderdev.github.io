@@ -55,8 +55,11 @@ getTileSize windowWidth boardSize =
     let
         gameWindowWidth =
             (toFloat windowWidth * 0.8) |> round |> roundToEven
+
+        widthPerTile =
+            gameWindowWidth // boardSize |> roundToEven
     in
-    gameWindowWidth // boardSize |> roundToEven
+    min widthPerTile 140
 
 
 type alias Flags =
@@ -343,7 +346,13 @@ viewCell tileSize coords cell =
         , centerY
         , Border.width TileSvg.borderWidth
         , Border.color darkBlue
-        , Border.rounded 6
+        , Border.rounded
+            (if tileSize < 80 then
+                2
+
+             else
+                6
+            )
         , Background.color lightBlue
         , rotate (degrees (toFloat ((cell.initRotations + cell.rotations) * 90)))
         , Events.onClick (RotateTile coords)
