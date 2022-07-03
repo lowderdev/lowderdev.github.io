@@ -51,25 +51,35 @@ grey =
     rgb255 150 150 150
 
 
-roundToEven : Int -> Int
-roundToEven int =
-    2 * (int // 2)
+headerHeight : Int
+headerHeight =
+    80
+
+
+minWindowSize : Int
+minWindowSize =
+    300
+
+
+minTileWidth : Int
+minTileWidth =
+    140
 
 
 getTileSize : Int -> Int -> Int
-getTileSize windowWidth boardSize =
+getTileSize windowSize boardSize =
     let
         gameWindowWidth =
-            (toFloat windowWidth * 0.8) |> round |> roundToEven
+            (toFloat (max minWindowSize windowSize) * 0.8) |> round |> roundToEven
 
         widthPerTile =
             gameWindowWidth // boardSize |> roundToEven
     in
-    min widthPerTile 140
+    min widthPerTile minTileWidth
 
 
 type alias Flags =
-    { number : Int, windowWidth : Int }
+    { number : Int, windowWidth : Int, windowHeight : Int }
 
 
 main : Program Flags Model Msg
@@ -82,119 +92,148 @@ main =
         }
 
 
+
+-- Model
+
+
 type alias Model =
     { boardSize : Int
     , board : GameBoard
     , seed : Random.Seed
     , solved : Bool
-    , windowWidth : Int
+    , windowSize : Int
     , tileSize : Int
     }
 
 
+
+-- Int
+
+
 init : Flags -> ( Model, Cmd Msg )
-init { number, windowWidth } =
+init { number, windowWidth, windowHeight } =
     let
         ( board, seed ) =
             GameBoard.initGameBoard defaultBoardSize (Random.initialSeed number)
+
+        windowSize =
+            min windowWidth windowHeight
     in
     ( { boardSize = defaultBoardSize
       , board = board
       , seed = seed
       , solved = False
-      , windowWidth = windowWidth
-      , tileSize = getTileSize windowWidth defaultBoardSize
+      , windowSize = windowSize
+      , tileSize = getTileSize windowSize defaultBoardSize
       }
     , Cmd.none
     )
 
 
+
+-- Subscriptions
+
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Browser.Events.onResize (\width _ -> GotResize width)
+    Browser.Events.onResize (\width height -> WindowResized width height)
+
+
+
+-- Update
 
 
 type Msg
-    = GotResize Int
-    | GenerateSeed
-    | NewSeed Int
-    | RotateTile GameBoard.Coords
-    | DecSize
-    | IncSize
+    = NewSeedRequested
+    | NewSeedReceived Int
+    | BoardSizeDecreased
+    | BoardSizeIncreased
+    | TileRotated GameBoard.Coords
+    | WindowResized Int Int
 
 
 generateSeed : Cmd Msg
 generateSeed =
-    Random.generate NewSeed (Random.int Random.minInt Random.maxInt)
+    Random.generate NewSeedReceived (Random.int Random.minInt Random.maxInt)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotResize windowWidth ->
-            ( { model | windowWidth = windowWidth, tileSize = getTileSize windowWidth model.boardSize }, Cmd.none )
-
-        GenerateSeed ->
+        NewSeedRequested ->
             ( model, generateSeed )
 
-        NewSeed int ->
-            let
-                ( newBoard, newSeed ) =
-                    GameBoard.initGameBoard model.boardSize (Random.initialSeed int)
-            in
-            ( { model | board = newBoard, seed = newSeed, solved = False }, Cmd.none )
+        NewSeedReceived int ->
+            handleNewSeedReceived int model
 
-        RotateTile coords ->
-            let
-                newBoard =
-                    GameBoard.rotateCell coords model.board
+        BoardSizeDecreased ->
+            handleBoardSizeChange (max minBoardSize (model.boardSize - 1)) model
 
-                isSolved =
-                    List.all
-                        (\x -> x == 0)
-                        (List.map (\{ rotations } -> rotations) (Dict.values newBoard))
-            in
-            if model.solved then
-                ( model, Cmd.none )
+        BoardSizeIncreased ->
+            handleBoardSizeChange (min (model.boardSize + 1) maxBoardSize) model
 
-            else
-                ( { model | board = newBoard, solved = isSolved }, Cmd.none )
+        TileRotated coords ->
+            handleTileRotated coords model
 
-        DecSize ->
-            let
-                newBoardSize =
-                    max minBoardSize (model.boardSize - 1)
+        WindowResized width height ->
+            handleWindowResized width height model
 
-                ( newBoard, newSeed ) =
-                    GameBoard.initGameBoard newBoardSize model.seed
-            in
-            ( { model
-                | boardSize = newBoardSize
-                , board = newBoard
-                , seed = newSeed
-                , solved = False
-                , tileSize = getTileSize model.windowWidth newBoardSize
-              }
-            , Cmd.none
-            )
 
-        IncSize ->
-            let
-                newBoardSize =
-                    min (model.boardSize + 1) maxBoardSize
+handleNewSeedReceived : Int -> Model -> ( Model, Cmd Msg )
+handleNewSeedReceived int model =
+    let
+        ( newBoard, newSeed ) =
+            GameBoard.initGameBoard model.boardSize (Random.initialSeed int)
+    in
+    ( { model | board = newBoard, seed = newSeed, solved = False }, Cmd.none )
 
-                ( newBoard, newSeed ) =
-                    GameBoard.initGameBoard newBoardSize model.seed
-            in
-            ( { model
-                | boardSize = newBoardSize
-                , board = newBoard
-                , seed = newSeed
-                , solved = False
-                , tileSize = getTileSize model.windowWidth newBoardSize
-              }
-            , Cmd.none
-            )
+
+handleTileRotated : GameBoard.Coords -> Model -> ( Model, Cmd Msg )
+handleTileRotated coords model =
+    let
+        newBoard =
+            GameBoard.rotateCell coords model.board
+
+        isSolved =
+            List.all
+                (\x -> x == 0)
+                (List.map (\{ rotations } -> rotations) (Dict.values newBoard))
+    in
+    if model.solved then
+        ( model, Cmd.none )
+
+    else
+        ( { model | board = newBoard, solved = isSolved }, Cmd.none )
+
+
+handleBoardSizeChange : Int -> Model -> ( Model, Cmd Msg )
+handleBoardSizeChange newBoardSize model =
+    let
+        ( newBoard, newSeed ) =
+            GameBoard.initGameBoard newBoardSize model.seed
+    in
+    ( { model
+        | boardSize = newBoardSize
+        , board = newBoard
+        , seed = newSeed
+        , solved = False
+        , tileSize = getTileSize model.windowSize newBoardSize
+      }
+    , Cmd.none
+    )
+
+
+handleWindowResized : Int -> Int -> Model -> ( Model, Cmd Msg )
+handleWindowResized width height model =
+    let
+        windowSize =
+            min width (height - headerHeight)
+    in
+    ( { model | windowSize = windowSize, tileSize = getTileSize windowSize model.boardSize }, Cmd.none )
+
+
+
+-- View
 
 
 view : Model -> Browser.Document Msg
@@ -207,22 +246,12 @@ view ({ board, boardSize, tileSize } as model) =
     , body =
         [ layout []
             (viewBody
-                [ gameWindowHeader model
-                , gameWindow boardSize tiles
+                [ viewHeader model
+                , viewGameWindow boardSize tiles
                 ]
             )
         ]
     }
-
-
-split : Int -> List a -> List (List a)
-split toTake list =
-    case list of
-        [] ->
-            []
-
-        _ ->
-            List.take toTake list :: split toTake (List.drop toTake list)
 
 
 viewBody : List (Element msg) -> Element msg
@@ -232,14 +261,14 @@ viewBody contents =
         contents
 
 
-gameWindow : Int -> List (Element Msg) -> Element Msg
-gameWindow boardSize tiles =
+viewGameWindow : Int -> List (Element Msg) -> Element Msg
+viewGameWindow boardSize tiles =
     let
         rows =
             split boardSize tiles
 
         renderedRows =
-            List.map (\x -> boardRow x) rows
+            List.map (\x -> viewBoardRow x) rows
     in
     column
         [ centerX
@@ -250,9 +279,9 @@ gameWindow boardSize tiles =
         renderedRows
 
 
-gameWindowHeader : Model -> Element Msg
-gameWindowHeader model =
-    row [ width fill, height (px 80), padding 60 ]
+viewHeader : Model -> Element Msg
+viewHeader model =
+    row [ width fill, height (px headerHeight), padding 60 ]
         [ row [ width (fillPortion 1), spacing 4 ]
             [ Input.button
                 [ width shrink
@@ -263,9 +292,9 @@ gameWindowHeader model =
                 , Background.color lightBlue
                 , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
                 ]
-                { onPress = Just GenerateSeed, label = text "New" }
-            , decSizeButton model
-            , incSizeButton model
+                { onPress = Just NewSeedRequested, label = text "New" }
+            , viewBoardSizeDecButton model
+            , viewBoardSizeIncButton model
             ]
         , el [ width (fillPortion 1), Font.center ]
             (if model.solved then
@@ -279,7 +308,7 @@ gameWindowHeader model =
                         , Border.rounded 6
                         , Background.color lightBlue
                         ]
-                        { onPress = Just GenerateSeed, label = text "Play Again" }
+                        { onPress = Just NewSeedRequested, label = text "Play Again" }
                     ]
 
              else
@@ -289,8 +318,8 @@ gameWindowHeader model =
         ]
 
 
-decSizeButton : Model -> Element Msg
-decSizeButton model =
+viewBoardSizeDecButton : Model -> Element Msg
+viewBoardSizeDecButton model =
     if model.boardSize <= minBoardSize then
         Input.button
             [ width (px 60)
@@ -314,11 +343,11 @@ decSizeButton model =
             , Background.color lightBlue
             , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
             ]
-            { onPress = Just DecSize, label = text "-" }
+            { onPress = Just BoardSizeDecreased, label = text "-" }
 
 
-incSizeButton : Model -> Element Msg
-incSizeButton model =
+viewBoardSizeIncButton : Model -> Element Msg
+viewBoardSizeIncButton model =
     if model.boardSize >= maxBoardSize then
         Input.button
             [ width (px 60)
@@ -342,11 +371,11 @@ incSizeButton model =
             , Background.color lightBlue
             , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
             ]
-            { onPress = Just IncSize, label = text "+" }
+            { onPress = Just BoardSizeIncreased, label = text "+" }
 
 
-boardRow : List (Element msg) -> Element msg
-boardRow elements =
+viewBoardRow : List (Element msg) -> Element msg
+viewBoardRow elements =
     row [ centerX, centerY ] elements
 
 
@@ -367,7 +396,7 @@ viewCell tileSize coords cell =
         , Background.color lightBlue
         , rotate (degrees (toFloat ((cell.initRotations + cell.rotations) * 90)))
         , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
-        , Events.onClick (RotateTile coords)
+        , Events.onClick (TileRotated coords)
         ]
         (case cell.shape of
             Knob ->
@@ -385,3 +414,22 @@ viewCell tileSize coords cell =
             Empty ->
                 Element.none
         )
+
+
+
+-- Helpers
+
+
+roundToEven : Int -> Int
+roundToEven int =
+    2 * (int // 2)
+
+
+split : Int -> List a -> List (List a)
+split toTake list =
+    case list of
+        [] ->
+            []
+
+        _ ->
+            List.take toTake list :: split toTake (List.drop toTake list)
