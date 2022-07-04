@@ -5238,7 +5238,7 @@ var $author$project$Main$getTileSize = F2(
 	function (windowSize, boardSize) {
 		var gameWindowWidth = $author$project$Main$roundToEven(
 			$elm$core$Basics$round(
-				A2($elm$core$Basics$max, $author$project$Main$minWindowSize, windowSize) * 0.8));
+				A2($elm$core$Basics$max, $author$project$Main$minWindowSize, windowSize) * 0.7));
 		var widthPerTile = $author$project$Main$roundToEven((gameWindowWidth / boardSize) | 0);
 		return A2($elm$core$Basics$min, widthPerTile, $author$project$Main$minTileWidth);
 	});
@@ -6757,7 +6757,7 @@ var $author$project$Main$handleWindowResized = F3(
 				}),
 			$elm$core$Platform$Cmd$none);
 	});
-var $author$project$Main$maxBoardSize = 12;
+var $author$project$Main$maxBoardSize = 20;
 var $author$project$Main$minBoardSize = 3;
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -13267,87 +13267,57 @@ var $mdgriffith$elm_ui$Element$text = function (content) {
 	return $mdgriffith$elm_ui$Internal$Model$Text(content);
 };
 var $author$project$Main$BoardSizeDecreased = {$: 2};
+var $author$project$Main$grey = A3($mdgriffith$elm_ui$Element$rgb255, 150, 150, 150);
 var $mdgriffith$elm_ui$Internal$Model$Label = function (a) {
 	return {$: 5, a: a};
 };
 var $mdgriffith$elm_ui$Element$Region$description = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Describe, $mdgriffith$elm_ui$Internal$Model$Label);
-var $author$project$Main$grey = A3($mdgriffith$elm_ui$Element$rgb255, 150, 150, 150);
-var $author$project$Main$viewBoardSizeDecButton = function (model) {
+var $author$project$Main$viewBoardSizeButton = F2(
+	function (color, options) {
+		return A2(
+			$mdgriffith$elm_ui$Element$Input$button,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width(
+					$mdgriffith$elm_ui$Element$px(60)),
+					$mdgriffith$elm_ui$Element$height(
+					$mdgriffith$elm_ui$Element$px(60)),
+					$mdgriffith$elm_ui$Element$Font$center,
+					$mdgriffith$elm_ui$Element$padding(10),
+					$mdgriffith$elm_ui$Element$Border$rounded(6),
+					$mdgriffith$elm_ui$Element$Background$color(color),
+					$mdgriffith$elm_ui$Element$htmlAttribute(
+					A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation')),
+					$mdgriffith$elm_ui$Element$Region$description('board at min size')
+				]),
+			options);
+	});
+var $author$project$Main$viewDecBoardSizeButton = function (model) {
 	return (_Utils_cmp(model.D, $author$project$Main$minBoardSize) < 1) ? A2(
-		$mdgriffith$elm_ui$Element$Input$button,
-		_List_fromArray(
-			[
-				$mdgriffith$elm_ui$Element$width(
-				$mdgriffith$elm_ui$Element$px(60)),
-				$mdgriffith$elm_ui$Element$height(
-				$mdgriffith$elm_ui$Element$px(60)),
-				$mdgriffith$elm_ui$Element$Font$center,
-				$mdgriffith$elm_ui$Element$padding(10),
-				$mdgriffith$elm_ui$Element$Border$rounded(6),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$grey),
-				$mdgriffith$elm_ui$Element$htmlAttribute(
-				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation')),
-				$mdgriffith$elm_ui$Element$Region$description('board at min size')
-			]),
+		$author$project$Main$viewBoardSizeButton,
+		$author$project$Main$grey,
 		{
 			aJ: $mdgriffith$elm_ui$Element$text('-'),
 			aP: $elm$core$Maybe$Nothing
 		}) : A2(
-		$mdgriffith$elm_ui$Element$Input$button,
-		_List_fromArray(
-			[
-				$mdgriffith$elm_ui$Element$width(
-				$mdgriffith$elm_ui$Element$px(60)),
-				$mdgriffith$elm_ui$Element$height(
-				$mdgriffith$elm_ui$Element$px(60)),
-				$mdgriffith$elm_ui$Element$Font$center,
-				$mdgriffith$elm_ui$Element$padding(10),
-				$mdgriffith$elm_ui$Element$Border$rounded(6),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue),
-				$mdgriffith$elm_ui$Element$htmlAttribute(
-				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation'))
-			]),
+		$author$project$Main$viewBoardSizeButton,
+		$author$project$Main$lightBlue,
 		{
 			aJ: $mdgriffith$elm_ui$Element$text('-'),
 			aP: $elm$core$Maybe$Just($author$project$Main$BoardSizeDecreased)
 		});
 };
 var $author$project$Main$BoardSizeIncreased = {$: 3};
-var $author$project$Main$viewBoardSizeIncButton = function (model) {
+var $author$project$Main$viewIncBoardSizeButton = function (model) {
 	return (_Utils_cmp(model.D, $author$project$Main$maxBoardSize) > -1) ? A2(
-		$mdgriffith$elm_ui$Element$Input$button,
-		_List_fromArray(
-			[
-				$mdgriffith$elm_ui$Element$width(
-				$mdgriffith$elm_ui$Element$px(60)),
-				$mdgriffith$elm_ui$Element$height(
-				$mdgriffith$elm_ui$Element$px(60)),
-				$mdgriffith$elm_ui$Element$Font$center,
-				$mdgriffith$elm_ui$Element$padding(10),
-				$mdgriffith$elm_ui$Element$Border$rounded(6),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$grey),
-				$mdgriffith$elm_ui$Element$htmlAttribute(
-				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation')),
-				$mdgriffith$elm_ui$Element$Region$description('board at max size')
-			]),
+		$author$project$Main$viewBoardSizeButton,
+		$author$project$Main$grey,
 		{
 			aJ: $mdgriffith$elm_ui$Element$text('+'),
 			aP: $elm$core$Maybe$Nothing
 		}) : A2(
-		$mdgriffith$elm_ui$Element$Input$button,
-		_List_fromArray(
-			[
-				$mdgriffith$elm_ui$Element$width(
-				$mdgriffith$elm_ui$Element$px(60)),
-				$mdgriffith$elm_ui$Element$height(
-				$mdgriffith$elm_ui$Element$px(60)),
-				$mdgriffith$elm_ui$Element$Font$center,
-				$mdgriffith$elm_ui$Element$padding(10),
-				$mdgriffith$elm_ui$Element$Border$rounded(6),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Main$lightBlue),
-				$mdgriffith$elm_ui$Element$htmlAttribute(
-				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation'))
-			]),
+		$author$project$Main$viewBoardSizeButton,
+		$author$project$Main$lightBlue,
 		{
 			aJ: $mdgriffith$elm_ui$Element$text('+'),
 			aP: $elm$core$Maybe$Just($author$project$Main$BoardSizeIncreased)
@@ -13393,8 +13363,8 @@ var $author$project$Main$viewHeader = function (model) {
 							aJ: $mdgriffith$elm_ui$Element$text('New'),
 							aP: $elm$core$Maybe$Just($author$project$Main$NewSeedRequested)
 						}),
-						$author$project$Main$viewBoardSizeDecButton(model),
-						$author$project$Main$viewBoardSizeIncButton(model)
+						$author$project$Main$viewDecBoardSizeButton(model),
+						$author$project$Main$viewIncBoardSizeButton(model)
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$el,

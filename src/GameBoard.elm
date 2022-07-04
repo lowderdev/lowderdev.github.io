@@ -196,6 +196,16 @@ emptyCell =
     { shape = Empty, initRotations = 0, rotations = 0 }
 
 
+
+-- Use the depth first search maze generation algorithm
+-- This alg seems to have what we want, no noticable patterns, no cycles
+-- no empty cells. We also don't let a cell have more than 3 connections
+-- because we don't want a cross shape because there's not point in rotating
+-- such a cell.
+--
+-- maze gen video: https://www.youtube.com/watch?v=sVcB8vUFlmU
+
+
 depthFirstMazeGen : Coords -> List Coords -> Int -> Random.Seed -> Board -> ( Board, Random.Seed )
 depthFirstMazeGen (( x, y ) as currentCoords) searchPoints maxCoord seed0 board =
     let

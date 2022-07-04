@@ -28,7 +28,7 @@ minBoardSize =
 
 maxBoardSize : Int
 maxBoardSize =
-    12
+    20
 
 
 darkBlue : Color
@@ -70,7 +70,7 @@ getTileSize : Int -> Int -> Int
 getTileSize windowSize boardSize =
     let
         gameWindowWidth =
-            (toFloat (max minWindowSize windowSize) * 0.8) |> round |> roundToEven
+            (toFloat (max minWindowSize windowSize) * 0.7) |> round |> roundToEven
 
         widthPerTile =
             gameWindowWidth // boardSize |> roundToEven
@@ -293,8 +293,8 @@ viewHeader model =
                 , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
                 ]
                 { onPress = Just NewSeedRequested, label = text "New" }
-            , viewBoardSizeDecButton model
-            , viewBoardSizeIncButton model
+            , viewDecBoardSizeButton model
+            , viewIncBoardSizeButton model
             ]
         , el [ width (fillPortion 1), Font.center ]
             (if model.solved then
@@ -318,60 +318,37 @@ viewHeader model =
         ]
 
 
-viewBoardSizeDecButton : Model -> Element Msg
-viewBoardSizeDecButton model =
+viewDecBoardSizeButton : Model -> Element Msg
+viewDecBoardSizeButton model =
     if model.boardSize <= minBoardSize then
-        Input.button
-            [ width (px 60)
-            , height (px 60)
-            , Font.center
-            , padding 10
-            , Border.rounded 6
-            , Background.color grey
-            , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
-            , Region.description "board at min size"
-            ]
-            { onPress = Nothing, label = text "-" }
+        viewBoardSizeButton grey { onPress = Nothing, label = text "-" }
 
     else
-        Input.button
-            [ width (px 60)
-            , height (px 60)
-            , Font.center
-            , padding 10
-            , Border.rounded 6
-            , Background.color lightBlue
-            , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
-            ]
-            { onPress = Just BoardSizeDecreased, label = text "-" }
+        viewBoardSizeButton lightBlue { onPress = Just BoardSizeDecreased, label = text "-" }
 
 
-viewBoardSizeIncButton : Model -> Element Msg
-viewBoardSizeIncButton model =
+viewIncBoardSizeButton : Model -> Element Msg
+viewIncBoardSizeButton model =
     if model.boardSize >= maxBoardSize then
-        Input.button
-            [ width (px 60)
-            , height (px 60)
-            , Font.center
-            , padding 10
-            , Border.rounded 6
-            , Background.color grey
-            , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
-            , Region.description "board at max size"
-            ]
-            { onPress = Nothing, label = text "+" }
+        viewBoardSizeButton grey { onPress = Nothing, label = text "+" }
 
     else
-        Input.button
-            [ width (px 60)
-            , height (px 60)
-            , Font.center
-            , padding 10
-            , Border.rounded 6
-            , Background.color lightBlue
-            , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
-            ]
-            { onPress = Just BoardSizeIncreased, label = text "+" }
+        viewBoardSizeButton lightBlue { onPress = Just BoardSizeIncreased, label = text "+" }
+
+
+viewBoardSizeButton : Color -> { onPress : Maybe Msg, label : Element Msg } -> Element Msg
+viewBoardSizeButton color options =
+    Input.button
+        [ width (px 60)
+        , height (px 60)
+        , Font.center
+        , padding 10
+        , Border.rounded 6
+        , Background.color color
+        , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
+        , Region.description "board at min size"
+        ]
+        options
 
 
 viewBoardRow : List (Element msg) -> Element msg
