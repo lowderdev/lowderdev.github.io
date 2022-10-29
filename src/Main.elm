@@ -103,6 +103,7 @@ type alias Model =
     , solved : Bool
     , windowSize : Int
     , tileSize : Int
+    , history : List GameBoard
     }
 
 
@@ -119,12 +120,13 @@ init { number, windowWidth, windowHeight } =
         windowSize =
             min windowWidth windowHeight
     in
-    ( { boardSize = defaultBoardSize
-      , board = board
+    ( { board = board
+      , boardSize = defaultBoardSize
+      , history = []
       , seed = seed
       , solved = False
-      , windowSize = windowSize
       , tileSize = getTileSize windowSize defaultBoardSize
+      , windowSize = windowSize
       }
     , Cmd.none
     )
@@ -149,6 +151,7 @@ type Msg
     | BoardSizeDecreased
     | BoardSizeIncreased
     | TileRotated GameBoard.Coords
+    | UndoMove
     | WindowResized Int Int
 
 
@@ -175,6 +178,9 @@ update msg model =
         TileRotated coords ->
             handleTileRotated coords model
 
+        UndoMove ->
+            handleUndoMove model
+
         WindowResized width height ->
             handleWindowResized width height model
 
@@ -185,25 +191,32 @@ handleNewSeedReceived int model =
         ( newBoard, newSeed ) =
             GameBoard.initGameBoard model.boardSize (Random.initialSeed int)
     in
-    ( { model | board = newBoard, seed = newSeed, solved = False }, Cmd.none )
+    ( { model | board = newBoard, history = [], seed = newSeed, solved = False }, Cmd.none )
 
 
 handleTileRotated : GameBoard.Coords -> Model -> ( Model, Cmd Msg )
-handleTileRotated coords model =
+handleTileRotated coords ({ board, solved, history } as model) =
     let
         newBoard =
-            GameBoard.rotateCell coords model.board
+            GameBoard.rotateCell coords board
 
         isSolved =
-            List.all
-                (\x -> x == 0)
-                (List.map (\{ rotations } -> rotations) (Dict.values newBoard))
+            solved
+                || List.all
+                    (\x -> x == 0)
+                    (List.map (\{ rotations } -> rotations) (Dict.values newBoard))
     in
-    if model.solved then
-        ( model, Cmd.none )
+    ( { model | board = newBoard, solved = isSolved, history = board :: history }, Cmd.none )
 
-    else
-        ( { model | board = newBoard, solved = isSolved }, Cmd.none )
+
+handleUndoMove : Model -> ( Model, Cmd Msg )
+handleUndoMove ({ history } as model) =
+    case history of
+        [] ->
+            ( model, Cmd.none )
+
+        lastBoard :: historyTail ->
+            ( { model | board = lastBoard, history = historyTail }, Cmd.none )
 
 
 handleBoardSizeChange : Int -> Model -> ( Model, Cmd Msg )
@@ -212,12 +225,13 @@ handleBoardSizeChange newBoardSize model =
         ( newBoard, newSeed ) =
             GameBoard.initGameBoard newBoardSize model.seed
     in
-    ( { model
-        | boardSize = newBoardSize
-        , board = newBoard
-        , seed = newSeed
-        , solved = False
-        , tileSize = getTileSize model.windowSize newBoardSize
+    ( { boardSize = newBoardSize
+      , board = newBoard
+      , seed = newSeed
+      , solved = False
+      , windowSize = model.windowSize
+      , tileSize = getTileSize model.windowSize newBoardSize
+      , history = []
       }
     , Cmd.none
     )
@@ -283,39 +297,28 @@ viewHeader : Model -> Element Msg
 viewHeader model =
     row [ width fill, height (px headerHeight), padding 60 ]
         [ row [ width (fillPortion 1), spacing 4 ]
-            [ Input.button
-                [ width shrink
-                , height (px 60)
-                , Font.center
-                , padding 10
-                , Border.rounded 6
-                , Background.color lightBlue
-                , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
-                ]
-                { onPress = Just NewSeedRequested, label = text "New" }
+            [ viewNewButton
             , viewDecBoardSizeButton model
             , viewIncBoardSizeButton model
+            , viewUndoButton model
             ]
-        , el [ width (fillPortion 1), Font.center ]
-            (if model.solved then
-                row [ centerX ]
-                    [ el [ padding 40, Font.center, Font.size 40 ] (text "🎉 🥳 🎉")
-                    , Input.button
-                        [ width (px 140)
-                        , height (px 60)
-                        , centerX
-                        , Font.center
-                        , Border.rounded 6
-                        , Background.color lightBlue
-                        ]
-                        { onPress = Just NewSeedRequested, label = text "Play Again" }
-                    ]
-
-             else
-                Element.none
-            )
+        , viewWinMessage model
         , el [ width (fillPortion 1) ] Element.none
         ]
+
+
+viewNewButton : Element Msg
+viewNewButton =
+    Input.button
+        [ width shrink
+        , height (px 60)
+        , Font.center
+        , padding 10
+        , Border.rounded 6
+        , Background.color lightBlue
+        , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
+        ]
+        { onPress = Just NewSeedRequested, label = text "New" }
 
 
 viewDecBoardSizeButton : Model -> Element Msg
@@ -349,6 +352,46 @@ viewBoardSizeButton color options =
         , Region.description "board at min size"
         ]
         options
+
+
+viewUndoButton : Model -> Element Msg
+viewUndoButton model =
+    if List.length model.history == 0 then
+        Element.none
+
+    else
+        Input.button
+            [ width shrink
+            , height (px 60)
+            , Font.center
+            , padding 10
+            , Border.rounded 6
+            , Background.color lightBlue
+            , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
+            ]
+            { onPress = Just UndoMove, label = text "Undo" }
+
+
+viewWinMessage : Model -> Element Msg
+viewWinMessage model =
+    el [ width (fillPortion 1), Font.center ]
+        (if model.solved then
+            row [ centerX ]
+                [ el [ padding 40, Font.center, Font.size 40 ] (text "🎉 🥳 🎉")
+                , Input.button
+                    [ width (px 140)
+                    , height (px 60)
+                    , centerX
+                    , Font.center
+                    , Border.rounded 6
+                    , Background.color lightBlue
+                    ]
+                    { onPress = Just NewSeedRequested, label = text "Play Again" }
+                ]
+
+         else
+            Element.none
+        )
 
 
 viewBoardRow : List (Element msg) -> Element msg
