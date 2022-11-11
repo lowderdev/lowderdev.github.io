@@ -1,4 +1,4 @@
-module TileSvg exposing
+module Page.TileSvg exposing
     ( barSvg
     , borderWidth
     , elbowSvg

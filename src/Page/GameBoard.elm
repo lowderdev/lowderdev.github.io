@@ -1,4 +1,4 @@
-module GameBoard exposing (..)
+module Page.GameBoard exposing (..)
 
 import Dict exposing (Dict)
 import Maybe
