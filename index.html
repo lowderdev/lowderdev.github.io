@@ -8,11 +8,12 @@
 
 <body>
   <div id="main"></div>
+  <p>hello</p>
   <script>
     var app = Elm.Main.init({
       node: document.getElementById('main'),
       flags: {
-        number: Date.now(),
+        intTime: Date.now(),
         windowWidth: window.innerWidth,
         windowHeight: window.innerHeight
       }

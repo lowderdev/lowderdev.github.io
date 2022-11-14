@@ -1,27 +1,28 @@
-module Main exposing (Model, Msg(..), init, main, subscriptions, update, view, viewLink)
+module Main exposing (main)
 
-import Browser
+import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Page.Graph
-import Url
-import Url.Parser exposing (oneOf, top)
+import Element exposing (..)
+import Element.Font as Font
+import Html exposing (Html)
+import Page.Graph as Graph
+import Route exposing (Route)
+import Url exposing (Url)
 
 
 
 -- MAIN
 
 
-main : Program () Model Msg
+main : Program Flags Model Msg
 main =
     Browser.application
         { init = init
         , view = view
         , update = update
-        , subscriptions = subscriptions
-        , onUrlChange = UrlChanged
+        , subscriptions = \_ -> Sub.none
         , onUrlRequest = LinkClicked
+        , onUrlChange = UrlChanged
         }
 
 
@@ -30,95 +31,146 @@ main =
 
 
 type alias Model =
-    { key : Nav.Key
-    , url : Url.Url
+    { route : Route
+    , page : Page
+    , navKey : Nav.Key
+    , intTime : Int
+    , windowWidth : Int
+    , windowHeight : Int
     }
 
 
 type Page
-    = Home
-    | Graph
-
-
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init flags url key =
-    ( Model key url, Cmd.none )
-
-
-
--- UPDATE
+    = NotFoundPage
+    | HomePage
+    | GraphPage Graph.Model
 
 
 type Msg
-    = LinkClicked Browser.UrlRequest
-    | UrlChanged Url.Url
+    = GraphMsg Graph.Msg
+    | LinkClicked UrlRequest
+    | UrlChanged Url
+
+
+type alias Flags =
+    { intTime : Int, windowWidth : Int, windowHeight : Int }
+
+
+init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url navKey =
+    let
+        model =
+            { route = Route.parseUrl url
+            , page = NotFoundPage
+            , navKey = navKey
+            , intTime = flags.intTime
+            , windowWidth = flags.windowWidth
+            , windowHeight = flags.windowHeight
+            }
+    in
+    initCurrentPage ( model, Cmd.none )
+
+
+initCurrentPage : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+initCurrentPage ( model, existingCmds ) =
+    let
+        ( currentPage, mappedPageCmds ) =
+            case model.route of
+                Route.NotFound ->
+                    ( NotFoundPage, Cmd.none )
+
+                Route.HomeRoute ->
+                    ( HomePage, Cmd.none )
+
+                Route.GraphRoute ->
+                    let
+                        ( pageModel, pageCmds ) =
+                            Graph.init
+                                { number = model.intTime
+                                , windowWidth = model.windowWidth
+                                , windowHeight = model.windowHeight
+                                }
+                    in
+                    ( GraphPage pageModel, Cmd.map GraphMsg pageCmds )
+    in
+    ( { model | page = currentPage }
+    , Cmd.batch [ existingCmds, mappedPageCmds ]
+    )
+
+
+view : Model -> Document Msg
+view model =
+    { title = "lowderdev"
+    , body =
+        [ layout [] (currentView model) ]
+    }
+
+
+currentView : Model -> Element Msg
+currentView model =
+    case model.page of
+        NotFoundPage ->
+            notFoundView
+
+        HomePage ->
+            homeView
+
+        GraphPage pageModel ->
+            Graph.view pageModel
+                |> Element.map GraphMsg
+
+
+notFoundView : Element msg
+notFoundView =
+    row [ centerX, padding 100 ]
+        [ el [] (text "Oops! The page you requested was not found!")
+        ]
+
+
+homeView : Element Msg
+homeView =
+    column [ centerX, padding 100 ]
+        [ el [] (text "Hi. My name is Logan and this is a website.")
+        , el [] (text "Here are some things I've made:")
+        , link [ paddingXY 20 0 ] { url = "/graph", label = el [ Font.underline ] (text "Graph game") }
+        ]
+
+
+
+-- Update
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        LinkClicked urlRequest ->
-            case urlRequest of
-                Browser.Internal url ->
-                    ( model, Nav.pushUrl model.key (Url.toString url) )
-
-                Browser.External href ->
-                    ( model, Nav.load href )
-
-        UrlChanged url ->
-            ( { model | url = url }
-            , Cmd.none
+    case ( msg, model.page ) of
+        ( GraphMsg subMsg, GraphPage pageModel ) ->
+            let
+                ( updatedPageModel, updatedCmd ) =
+                    Graph.update subMsg pageModel
+            in
+            ( { model | page = GraphPage updatedPageModel }
+            , Cmd.map GraphMsg updatedCmd
             )
 
+        ( LinkClicked urlRequest, _ ) ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model
+                    , Nav.pushUrl model.navKey (Url.toString url)
+                    )
 
+                Browser.External url ->
+                    ( model
+                    , Nav.load url
+                    )
 
--- SUBSCRIPTIONS
+        ( UrlChanged url, _ ) ->
+            let
+                newRoute =
+                    Route.parseUrl url
+            in
+            ( { model | route = newRoute }, Cmd.none )
+                |> initCurrentPage
 
-
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
-
-
-
--- VIEW
-
-
-view : Model -> Browser.Document Msg
-view model =
-    let
-        parser =
-            oneOf
-                [ Url.Parser.map Home top
-                , Url.Parser.map Graph (Url.Parser.s "graph")
-                ]
-    in
-    case Url.Parser.parse parser model.url of
-        Just Home ->
-            { title = "URL Interceptor"
-            , body =
-                [ text "The current URL is: "
-                , b [] [ text (Url.toString model.url) ]
-                , ul []
-                    [ viewLink "/home"
-                    , viewLink "/graph"
-                    , viewLink "/profile"
-                    , viewLink "/reviews/the-century-of-the-self"
-                    , viewLink "/reviews/public-opinion"
-                    , viewLink "/reviews/shah-of-shahs"
-                    ]
-                ]
-            }
-
-        Just Graph ->
-            Page.Graph.view (Page.Graph.init ())
-
-        _ ->
-            { title = "URL Interceptor"
-            , body = [ text "404" ]
-            }
-
-
-viewLink : String -> Html msg
-viewLink path =
-    li [] [ a [ href path ] [ text path ] ]
+        ( _, _ ) ->
+            ( model, Cmd.none )

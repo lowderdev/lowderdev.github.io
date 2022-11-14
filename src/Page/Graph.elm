@@ -241,22 +241,16 @@ handleWindowResized width height model =
 -- View
 
 
-view : Model -> Browser.Document Msg
+view : Model -> Element Msg
 view ({ board, boardSize, tileSize } as model) =
     let
         tiles =
             Dict.foldr (\k v acc -> viewCell tileSize k v :: acc) [] board
     in
-    { title = "Graph Bang"
-    , body =
-        [ layout []
-            (viewBody
-                [ viewHeader model
-                , viewGameWindow boardSize tiles
-                ]
-            )
+    viewBody
+        [ viewHeader model
+        , viewGameWindow boardSize tiles
         ]
-    }
 
 
 viewBody : List (Element msg) -> Element msg
