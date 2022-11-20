@@ -6,9 +6,10 @@ import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Html.Attributes
+import Json.Decode as Decode
 import List.Extra
 import Page.Colors as Colors
-import Page.GameBoard exposing (Coords, Shape(..))
+import Random exposing (Seed)
 
 
 
@@ -19,9 +20,10 @@ type alias Model =
     { boardSize : Int
     , grid : Grid
     , snakeCoords : SnakeCoords
-    , moveDir : MoveDir
+    , moveDir : Direction
     , moveDelta : Int
     , gameOver : Bool
+    , seed : Seed
     }
 
 
@@ -43,11 +45,16 @@ type alias SnakeCoords =
     { head : Coords, tail : List Coords }
 
 
-type MoveDir
-    = N
-    | S
-    | E
-    | W
+type Key
+    = Arrow Direction
+    | Other
+
+
+type Direction
+    = Left
+    | Right
+    | Up
+    | Down
 
 
 type alias Flags =
@@ -59,10 +66,10 @@ type alias Flags =
 
 
 init : Flags -> ( Model, Cmd Msg )
-init _ =
+init { number } =
     let
         boardSize =
-            5
+            20
 
         mid =
             boardSize // 2
@@ -72,13 +79,17 @@ init _ =
 
         gridWithSnake =
             buildGrid boardSize startingSnakeCoords
+
+        seed =
+            Random.initialSeed number
     in
     ( { boardSize = boardSize
       , grid = gridWithSnake
       , snakeCoords = startingSnakeCoords
-      , moveDir = E
+      , moveDir = Right
       , moveDelta = 0
       , gameOver = False
+      , seed = seed
       }
     , Cmd.none
     )
@@ -114,8 +125,11 @@ buildGrid boardSize snakeCoords =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    Browser.Events.onAnimationFrameDelta Tick
+subscriptions _ =
+    Sub.batch
+        [ Browser.Events.onAnimationFrameDelta Tick
+        , Browser.Events.onKeyDown keyDecoder
+        ]
 
 
 
@@ -124,6 +138,7 @@ subscriptions model =
 
 type Msg
     = Tick Float
+    | KeyDown Key
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -131,6 +146,14 @@ update msg model =
     case msg of
         Tick delta ->
             ( moveSnake delta model, Cmd.none )
+
+        KeyDown key ->
+            case key of
+                Arrow direction ->
+                    ( updateMoveDir direction model, Cmd.none )
+
+                Other ->
+                    ( model, Cmd.none )
 
 
 moveSnake : Float -> Model -> Model
@@ -144,30 +167,49 @@ moveSnake tickDelta ({ boardSize, snakeCoords, moveDir, moveDelta } as model) =
 
         newHead =
             case moveDir of
-                N ->
+                Up ->
                     Tuple.mapFirst (\y -> y - 1) head
 
-                S ->
+                Down ->
                     Tuple.mapFirst (\y -> y + 1) head
 
-                E ->
+                Right ->
                     Tuple.mapSecond (\x -> x + 1) head
 
-                W ->
+                Left ->
                     Tuple.mapSecond (\x -> x - 1) head
 
         newTail =
             head :: Maybe.withDefault [] (List.Extra.init tail)
+
+        crash =
+            Tuple.first newHead
+                >= boardSize
+                || Tuple.first newHead
+                < 0
+                || Tuple.second newHead
+                >= boardSize
+                || Tuple.second newHead
+                < 0
     in
-    if newMoveDelta > 500 then
-        { model
-            | grid = buildGrid boardSize { head = newHead, tail = newTail }
-            , snakeCoords = { head = newHead, tail = newTail }
-            , moveDelta = 0
-        }
+    if newMoveDelta > 100 then
+        if crash then
+            { model | gameOver = True }
+
+        else
+            { model
+                | grid = buildGrid boardSize { head = newHead, tail = newTail }
+                , snakeCoords = { head = newHead, tail = newTail }
+                , moveDelta = 0
+            }
 
     else
         { model | moveDelta = newMoveDelta }
+
+
+updateMoveDir : Direction -> Model -> Model
+updateMoveDir direction model =
+    { model | moveDir = direction }
 
 
 
@@ -181,9 +223,7 @@ view { boardSize, grid } =
             List.Extra.groupsOf boardSize (Dict.values grid)
     in
     column
-        [ centerX
-        , centerY
-        ]
+        [ centerX, centerY ]
         (List.map viewRow rows)
 
 
@@ -194,29 +234,78 @@ viewRow cellRow =
 
 viewCell : Cell -> Element Msg
 viewCell cell =
+    let
+        color =
+            case cell of
+                Empty ->
+                    Colors.lightBlue
+
+                Snake ->
+                    Colors.white
+
+                Food ->
+                    Colors.lightBlue
+    in
     el
         [ centerX
         , centerY
-        , width (px 80)
-        , height (px 80)
+        , width (px 20)
+        , height (px 20)
         , Border.width 1
         , Border.color Colors.darkBlue
         , Border.rounded 2
-        , Background.color Colors.lightBlue
+        , Background.color color
         , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
         ]
-        (case cell of
-            Empty ->
-                none
-
-            Snake ->
-                text "s"
-
-            Food ->
-                text "f"
-        )
+        none
 
 
 cartesian : List a -> List b -> List ( a, b )
 cartesian xs ys =
     List.Extra.lift2 Tuple.pair xs ys
+
+
+keyDecoder : Decode.Decoder Msg
+keyDecoder =
+    let
+        stringDecoder =
+            Decode.field "key" Decode.string
+
+        directionDecode =
+            Decode.map toDirection stringDecoder
+
+        msgDecoder =
+            Decode.map KeyDown directionDecode
+    in
+    msgDecoder
+
+
+toDirection : String -> Key
+toDirection string =
+    case string of
+        "ArrowLeft" ->
+            Arrow Left
+
+        "a" ->
+            Arrow Left
+
+        "ArrowRight" ->
+            Arrow Right
+
+        "d" ->
+            Arrow Right
+
+        "ArrowUp" ->
+            Arrow Up
+
+        "w" ->
+            Arrow Up
+
+        "ArrowDown" ->
+            Arrow Down
+
+        "s" ->
+            Arrow Down
+
+        _ ->
+            Other

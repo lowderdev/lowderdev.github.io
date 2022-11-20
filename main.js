@@ -6300,7 +6300,7 @@ var $author$project$Page$Graph$init = function (_v0) {
 		},
 		$elm$core$Platform$Cmd$none);
 };
-var $author$project$Page$Snake$E = {$: 'E'};
+var $author$project$Page$Snake$Right = {$: 'Right'};
 var $author$project$Page$Snake$Empty = {$: 'Empty'};
 var $author$project$Page$Snake$Snake = {$: 'Snake'};
 var $elm$core$List$append = F2(
@@ -6379,7 +6379,9 @@ var $author$project$Page$Snake$buildGrid = F2(
 		return gridWithSnake;
 	});
 var $author$project$Page$Snake$init = function (_v0) {
-	var boardSize = 5;
+	var number = _v0.number;
+	var seed = $elm$random$Random$initialSeed(number);
+	var boardSize = 20;
 	var mid = (boardSize / 2) | 0;
 	var startingSnakeCoords = {
 		head: _Utils_Tuple2(mid, mid),
@@ -6391,7 +6393,7 @@ var $author$project$Page$Snake$init = function (_v0) {
 	};
 	var gridWithSnake = A2($author$project$Page$Snake$buildGrid, boardSize, startingSnakeCoords);
 	return _Utils_Tuple2(
-		{boardSize: boardSize, gameOver: false, grid: gridWithSnake, moveDelta: 0, moveDir: $author$project$Page$Snake$E, snakeCoords: startingSnakeCoords},
+		{boardSize: boardSize, gameOver: false, grid: gridWithSnake, moveDelta: 0, moveDir: $author$project$Page$Snake$Right, seed: seed, snakeCoords: startingSnakeCoords},
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$core$Platform$Cmd$map = _Platform_map;
@@ -6676,6 +6678,45 @@ var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Page$Snake$Tick = function (a) {
 	return {$: 'Tick', a: a};
 };
+var $author$project$Page$Snake$KeyDown = function (a) {
+	return {$: 'KeyDown', a: a};
+};
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Page$Snake$Arrow = function (a) {
+	return {$: 'Arrow', a: a};
+};
+var $author$project$Page$Snake$Down = {$: 'Down'};
+var $author$project$Page$Snake$Left = {$: 'Left'};
+var $author$project$Page$Snake$Other = {$: 'Other'};
+var $author$project$Page$Snake$Up = {$: 'Up'};
+var $author$project$Page$Snake$toDirection = function (string) {
+	switch (string) {
+		case 'ArrowLeft':
+			return $author$project$Page$Snake$Arrow($author$project$Page$Snake$Left);
+		case 'a':
+			return $author$project$Page$Snake$Arrow($author$project$Page$Snake$Left);
+		case 'ArrowRight':
+			return $author$project$Page$Snake$Arrow($author$project$Page$Snake$Right);
+		case 'd':
+			return $author$project$Page$Snake$Arrow($author$project$Page$Snake$Right);
+		case 'ArrowUp':
+			return $author$project$Page$Snake$Arrow($author$project$Page$Snake$Up);
+		case 'w':
+			return $author$project$Page$Snake$Arrow($author$project$Page$Snake$Up);
+		case 'ArrowDown':
+			return $author$project$Page$Snake$Arrow($author$project$Page$Snake$Down);
+		case 's':
+			return $author$project$Page$Snake$Arrow($author$project$Page$Snake$Down);
+		default:
+			return $author$project$Page$Snake$Other;
+	}
+};
+var $author$project$Page$Snake$keyDecoder = function () {
+	var stringDecoder = A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string);
+	var directionDecode = A2($elm$json$Json$Decode$map, $author$project$Page$Snake$toDirection, stringDecoder);
+	var msgDecoder = A2($elm$json$Json$Decode$map, $author$project$Page$Snake$KeyDown, directionDecode);
+	return msgDecoder;
+}();
 var $elm$browser$Browser$AnimationManager$Delta = function (a) {
 	return {$: 'Delta', a: a};
 };
@@ -6810,8 +6851,264 @@ var $elm$browser$Browser$AnimationManager$onAnimationFrameDelta = function (tagg
 		$elm$browser$Browser$AnimationManager$Delta(tagger));
 };
 var $elm$browser$Browser$Events$onAnimationFrameDelta = $elm$browser$Browser$AnimationManager$onAnimationFrameDelta;
-var $author$project$Page$Snake$subscriptions = function (model) {
-	return $elm$browser$Browser$Events$onAnimationFrameDelta($author$project$Page$Snake$Tick);
+var $elm$browser$Browser$Events$Document = {$: 'Document'};
+var $elm$browser$Browser$Events$MySub = F3(
+	function (a, b, c) {
+		return {$: 'MySub', a: a, b: b, c: c};
+	});
+var $elm$browser$Browser$Events$State = F2(
+	function (subs, pids) {
+		return {pids: pids, subs: subs};
+	});
+var $elm$browser$Browser$Events$init = $elm$core$Task$succeed(
+	A2($elm$browser$Browser$Events$State, _List_Nil, $elm$core$Dict$empty));
+var $elm$browser$Browser$Events$nodeToKey = function (node) {
+	if (node.$ === 'Document') {
+		return 'd_';
+	} else {
+		return 'w_';
+	}
+};
+var $elm$browser$Browser$Events$addKey = function (sub) {
+	var node = sub.a;
+	var name = sub.b;
+	return _Utils_Tuple2(
+		_Utils_ap(
+			$elm$browser$Browser$Events$nodeToKey(node),
+			name),
+		sub);
+};
+var $elm$core$Dict$merge = F6(
+	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
+		var stepState = F3(
+			function (rKey, rValue, _v0) {
+				stepState:
+				while (true) {
+					var list = _v0.a;
+					var result = _v0.b;
+					if (!list.b) {
+						return _Utils_Tuple2(
+							list,
+							A3(rightStep, rKey, rValue, result));
+					} else {
+						var _v2 = list.a;
+						var lKey = _v2.a;
+						var lValue = _v2.b;
+						var rest = list.b;
+						if (_Utils_cmp(lKey, rKey) < 0) {
+							var $temp$rKey = rKey,
+								$temp$rValue = rValue,
+								$temp$_v0 = _Utils_Tuple2(
+								rest,
+								A3(leftStep, lKey, lValue, result));
+							rKey = $temp$rKey;
+							rValue = $temp$rValue;
+							_v0 = $temp$_v0;
+							continue stepState;
+						} else {
+							if (_Utils_cmp(lKey, rKey) > 0) {
+								return _Utils_Tuple2(
+									list,
+									A3(rightStep, rKey, rValue, result));
+							} else {
+								return _Utils_Tuple2(
+									rest,
+									A4(bothStep, lKey, lValue, rValue, result));
+							}
+						}
+					}
+				}
+			});
+		var _v3 = A3(
+			$elm$core$Dict$foldl,
+			stepState,
+			_Utils_Tuple2(
+				$elm$core$Dict$toList(leftDict),
+				initialResult),
+			rightDict);
+		var leftovers = _v3.a;
+		var intermediateResult = _v3.b;
+		return A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v4, result) {
+					var k = _v4.a;
+					var v = _v4.b;
+					return A3(leftStep, k, v, result);
+				}),
+			intermediateResult,
+			leftovers);
+	});
+var $elm$browser$Browser$Events$Event = F2(
+	function (key, event) {
+		return {event: event, key: key};
+	});
+var $elm$browser$Browser$Events$spawn = F3(
+	function (router, key, _v0) {
+		var node = _v0.a;
+		var name = _v0.b;
+		var actualNode = function () {
+			if (node.$ === 'Document') {
+				return _Browser_doc;
+			} else {
+				return _Browser_window;
+			}
+		}();
+		return A2(
+			$elm$core$Task$map,
+			function (value) {
+				return _Utils_Tuple2(key, value);
+			},
+			A3(
+				_Browser_on,
+				actualNode,
+				name,
+				function (event) {
+					return A2(
+						$elm$core$Platform$sendToSelf,
+						router,
+						A2($elm$browser$Browser$Events$Event, key, event));
+				}));
+	});
+var $elm$core$Dict$union = F2(
+	function (t1, t2) {
+		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
+	});
+var $elm$browser$Browser$Events$onEffects = F3(
+	function (router, subs, state) {
+		var stepRight = F3(
+			function (key, sub, _v6) {
+				var deads = _v6.a;
+				var lives = _v6.b;
+				var news = _v6.c;
+				return _Utils_Tuple3(
+					deads,
+					lives,
+					A2(
+						$elm$core$List$cons,
+						A3($elm$browser$Browser$Events$spawn, router, key, sub),
+						news));
+			});
+		var stepLeft = F3(
+			function (_v4, pid, _v5) {
+				var deads = _v5.a;
+				var lives = _v5.b;
+				var news = _v5.c;
+				return _Utils_Tuple3(
+					A2($elm$core$List$cons, pid, deads),
+					lives,
+					news);
+			});
+		var stepBoth = F4(
+			function (key, pid, _v2, _v3) {
+				var deads = _v3.a;
+				var lives = _v3.b;
+				var news = _v3.c;
+				return _Utils_Tuple3(
+					deads,
+					A3($elm$core$Dict$insert, key, pid, lives),
+					news);
+			});
+		var newSubs = A2($elm$core$List$map, $elm$browser$Browser$Events$addKey, subs);
+		var _v0 = A6(
+			$elm$core$Dict$merge,
+			stepLeft,
+			stepBoth,
+			stepRight,
+			state.pids,
+			$elm$core$Dict$fromList(newSubs),
+			_Utils_Tuple3(_List_Nil, $elm$core$Dict$empty, _List_Nil));
+		var deadPids = _v0.a;
+		var livePids = _v0.b;
+		var makeNewPids = _v0.c;
+		return A2(
+			$elm$core$Task$andThen,
+			function (pids) {
+				return $elm$core$Task$succeed(
+					A2(
+						$elm$browser$Browser$Events$State,
+						newSubs,
+						A2(
+							$elm$core$Dict$union,
+							livePids,
+							$elm$core$Dict$fromList(pids))));
+			},
+			A2(
+				$elm$core$Task$andThen,
+				function (_v1) {
+					return $elm$core$Task$sequence(makeNewPids);
+				},
+				$elm$core$Task$sequence(
+					A2($elm$core$List$map, $elm$core$Process$kill, deadPids))));
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$browser$Browser$Events$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var key = _v0.key;
+		var event = _v0.event;
+		var toMessage = function (_v2) {
+			var subKey = _v2.a;
+			var _v3 = _v2.b;
+			var node = _v3.a;
+			var name = _v3.b;
+			var decoder = _v3.c;
+			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : $elm$core$Maybe$Nothing;
+		};
+		var messages = A2($elm$core$List$filterMap, toMessage, state.subs);
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$map,
+					$elm$core$Platform$sendToApp(router),
+					messages)));
+	});
+var $elm$browser$Browser$Events$subMap = F2(
+	function (func, _v0) {
+		var node = _v0.a;
+		var name = _v0.b;
+		var decoder = _v0.c;
+		return A3(
+			$elm$browser$Browser$Events$MySub,
+			node,
+			name,
+			A2($elm$json$Json$Decode$map, func, decoder));
+	});
+_Platform_effectManagers['Browser.Events'] = _Platform_createManager($elm$browser$Browser$Events$init, $elm$browser$Browser$Events$onEffects, $elm$browser$Browser$Events$onSelfMsg, 0, $elm$browser$Browser$Events$subMap);
+var $elm$browser$Browser$Events$subscription = _Platform_leaf('Browser.Events');
+var $elm$browser$Browser$Events$on = F3(
+	function (node, name, decoder) {
+		return $elm$browser$Browser$Events$subscription(
+			A3($elm$browser$Browser$Events$MySub, node, name, decoder));
+	});
+var $elm$browser$Browser$Events$onKeyDown = A2($elm$browser$Browser$Events$on, $elm$browser$Browser$Events$Document, 'keydown');
+var $author$project$Page$Snake$subscriptions = function (_v0) {
+	return $elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				$elm$browser$Browser$Events$onAnimationFrameDelta($author$project$Page$Snake$Tick),
+				$elm$browser$Browser$Events$onKeyDown($author$project$Page$Snake$keyDecoder)
+			]));
 };
 var $author$project$Main$subscriptions = function (_v0) {
 	var page = _v0.page;
@@ -7136,6 +7433,7 @@ var $author$project$Page$Graph$update = F2(
 				return A3($author$project$Page$Graph$handleWindowResized, width, height, model);
 		}
 	});
+var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
@@ -7183,6 +7481,10 @@ var $elm$core$Tuple$mapSecond = F2(
 			x,
 			func(y));
 	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
 var $author$project$Page$Snake$moveSnake = F2(
 	function (tickDelta, model) {
 		var boardSize = model.boardSize;
@@ -7195,21 +7497,21 @@ var $author$project$Page$Snake$moveSnake = F2(
 		var tail = _v0.tail;
 		var newHead = function () {
 			switch (moveDir.$) {
-				case 'N':
+				case 'Up':
 					return A2(
 						$elm$core$Tuple$mapFirst,
 						function (y) {
 							return y - 1;
 						},
 						head);
-				case 'S':
+				case 'Down':
 					return A2(
 						$elm$core$Tuple$mapFirst,
 						function (y) {
 							return y + 1;
 						},
 						head);
-				case 'E':
+				case 'Right':
 					return A2(
 						$elm$core$Tuple$mapSecond,
 						function (x) {
@@ -7225,6 +7527,7 @@ var $author$project$Page$Snake$moveSnake = F2(
 						head);
 			}
 		}();
+		var crash = (_Utils_cmp(newHead.a, boardSize) > -1) || ((newHead.a < 0) || ((_Utils_cmp(newHead.b, boardSize) > -1) || (newHead.b < 0)));
 		var newTail = A2(
 			$elm$core$List$cons,
 			head,
@@ -7232,7 +7535,9 @@ var $author$project$Page$Snake$moveSnake = F2(
 				$elm$core$Maybe$withDefault,
 				_List_Nil,
 				$elm_community$list_extra$List$Extra$init(tail)));
-		return (newMoveDelta > 500) ? _Utils_update(
+		return (newMoveDelta > 100) ? (crash ? _Utils_update(
+			model,
+			{gameOver: true}) : _Utils_update(
 			model,
 			{
 				grid: A2(
@@ -7241,16 +7546,34 @@ var $author$project$Page$Snake$moveSnake = F2(
 					{head: newHead, tail: newTail}),
 				moveDelta: 0,
 				snakeCoords: {head: newHead, tail: newTail}
-			}) : _Utils_update(
+			})) : _Utils_update(
 			model,
 			{moveDelta: newMoveDelta});
 	});
+var $author$project$Page$Snake$updateMoveDir = F2(
+	function (direction, model) {
+		return _Utils_update(
+			model,
+			{moveDir: direction});
+	});
 var $author$project$Page$Snake$update = F2(
 	function (msg, model) {
-		var delta = msg.a;
-		return _Utils_Tuple2(
-			A2($author$project$Page$Snake$moveSnake, delta, model),
-			$elm$core$Platform$Cmd$none);
+		if (msg.$ === 'Tick') {
+			var delta = msg.a;
+			return _Utils_Tuple2(
+				A2($author$project$Page$Snake$moveSnake, delta, model),
+				$elm$core$Platform$Cmd$none);
+		} else {
+			var key = msg.a;
+			if (key.$ === 'Arrow') {
+				var direction = key.a;
+				return _Utils_Tuple2(
+					A2($author$project$Page$Snake$updateMoveDir, direction, model),
+					$elm$core$Platform$Cmd$none);
+			} else {
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			}
+		}
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -7524,10 +7847,6 @@ var $mdgriffith$elm_ui$Internal$Model$lengthClassName = function (x) {
 			return 'max' + ($elm$core$String$fromInt(max) + $mdgriffith$elm_ui$Internal$Model$lengthClassName(len));
 	}
 };
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
-};
 var $mdgriffith$elm_ui$Internal$Model$transformClass = function (transform) {
 	switch (transform.$) {
 		case 'Untransformed':
@@ -7679,24 +7998,6 @@ var $mdgriffith$elm_ui$Internal$Model$Style = F2(
 var $mdgriffith$elm_ui$Internal$Style$dot = function (c) {
 	return '.' + c;
 };
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (_v0.$ === 'Just') {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
-	});
 var $elm$core$String$fromFloat = _String_fromNumber;
 var $mdgriffith$elm_ui$Internal$Model$formatColor = function (_v0) {
 	var red = _v0.a;
@@ -11807,7 +12108,6 @@ var $mdgriffith$elm_ui$Internal$Model$renderWidth = function (w) {
 	}
 };
 var $mdgriffith$elm_ui$Internal$Flag$borderWidth = $mdgriffith$elm_ui$Internal$Flag$flag(27);
-var $elm$core$Basics$ge = _Utils_ge;
 var $mdgriffith$elm_ui$Internal$Model$skippable = F2(
 	function (flag, style) {
 		if (_Utils_eq(flag, $mdgriffith$elm_ui$Internal$Flag$borderWidth)) {
@@ -13596,7 +13896,6 @@ var $elm$html$Html$Events$preventDefaultOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
 	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $mdgriffith$elm_ui$Element$Input$onKeyLookup = function (lookup) {
 	var decode = function (code) {
 		var _v0 = lookup(code);
@@ -13936,6 +14235,16 @@ var $elm_community$list_extra$List$Extra$groupsOf = F2(
 		return A3($elm_community$list_extra$List$Extra$groupsOfWithStep, size, size, xs);
 	});
 var $author$project$Page$Snake$viewCell = function (cell) {
+	var color = function () {
+		switch (cell.$) {
+			case 'Empty':
+				return $author$project$Page$Colors$lightBlue;
+			case 'Snake':
+				return $author$project$Page$Colors$white;
+			default:
+				return $author$project$Page$Colors$lightBlue;
+		}
+	}();
 	return A2(
 		$mdgriffith$elm_ui$Element$el,
 		_List_fromArray(
@@ -13943,26 +14252,17 @@ var $author$project$Page$Snake$viewCell = function (cell) {
 				$mdgriffith$elm_ui$Element$centerX,
 				$mdgriffith$elm_ui$Element$centerY,
 				$mdgriffith$elm_ui$Element$width(
-				$mdgriffith$elm_ui$Element$px(80)),
+				$mdgriffith$elm_ui$Element$px(20)),
 				$mdgriffith$elm_ui$Element$height(
-				$mdgriffith$elm_ui$Element$px(80)),
+				$mdgriffith$elm_ui$Element$px(20)),
 				$mdgriffith$elm_ui$Element$Border$width(1),
 				$mdgriffith$elm_ui$Element$Border$color($author$project$Page$Colors$darkBlue),
 				$mdgriffith$elm_ui$Element$Border$rounded(2),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Colors$lightBlue),
+				$mdgriffith$elm_ui$Element$Background$color(color),
 				$mdgriffith$elm_ui$Element$htmlAttribute(
 				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation'))
 			]),
-		function () {
-			switch (cell.$) {
-				case 'Empty':
-					return $mdgriffith$elm_ui$Element$none;
-				case 'Snake':
-					return $mdgriffith$elm_ui$Element$text('s');
-				default:
-					return $mdgriffith$elm_ui$Element$text('f');
-			}
-		}());
+		$mdgriffith$elm_ui$Element$none);
 };
 var $author$project$Page$Snake$viewRow = function (cellRow) {
 	return A2(
