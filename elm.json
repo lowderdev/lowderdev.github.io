@@ -12,6 +12,7 @@
             "elm/random": "1.0.0",
             "elm/svg": "1.0.1",
             "elm/url": "1.0.0",
+            "elm-community/list-extra": "8.7.0",
             "mdgriffith/elm-ui": "1.1.8",
             "rtfeldman/elm-css": "17.0.1"
         },

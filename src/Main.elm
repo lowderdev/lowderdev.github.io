@@ -3,9 +3,11 @@ module Main exposing (main)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Element exposing (..)
+import Element.Background as Background
 import Element.Font as Font
-import Html exposing (Html)
+import Page.Colors exposing (darkBlue, white)
 import Page.Graph as Graph
+import Page.Snake as Snake
 import Route exposing (Route)
 import Url exposing (Url)
 
@@ -44,12 +46,14 @@ type Page
     = NotFoundPage
     | HomePage
     | GraphPage Graph.Model
+    | SnakePage Snake.Model
 
 
 type Msg
-    = GraphMsg Graph.Msg
-    | LinkClicked UrlRequest
+    = LinkClicked UrlRequest
     | UrlChanged Url
+    | GraphMsg Graph.Msg
+    | SnakeMsg Snake.Msg
 
 
 type alias Flags =
@@ -59,6 +63,9 @@ type alias Flags =
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url navKey =
     let
+        aurl =
+            Debug.log (Url.toString url)
+
         model =
             { route = Route.parseUrl url
             , page = NotFoundPage
@@ -92,6 +99,17 @@ initCurrentPage ( model, existingCmds ) =
                                 }
                     in
                     ( GraphPage pageModel, Cmd.map GraphMsg pageCmds )
+
+                Route.SnakeRoute ->
+                    let
+                        ( pageModel, pageCmds ) =
+                            Snake.init
+                                { number = model.intTime
+                                , windowWidth = model.windowWidth
+                                , windowHeight = model.windowHeight
+                                }
+                    in
+                    ( SnakePage pageModel, Cmd.map SnakeMsg pageCmds )
     in
     ( { model | page = currentPage }
     , Cmd.batch [ existingCmds, mappedPageCmds ]
@@ -102,7 +120,12 @@ view : Model -> Document Msg
 view model =
     { title = "lowderdev"
     , body =
-        [ layout [] (currentView model) ]
+        [ layout
+            [ Background.color darkBlue
+            , Font.color white
+            ]
+            (currentView model)
+        ]
     }
 
 
@@ -119,6 +142,10 @@ currentView model =
             Graph.view pageModel
                 |> Element.map GraphMsg
 
+        SnakePage pageModel ->
+            Snake.view pageModel
+                |> Element.map SnakeMsg
+
 
 notFoundView : Element msg
 notFoundView =
@@ -132,7 +159,8 @@ homeView =
     column [ centerX, padding 100 ]
         [ el [] (text "Hi. My name is Logan and this is a website.")
         , el [] (text "Here are some things I've made:")
-        , link [ paddingXY 20 0 ] { url = "/graph", label = el [ Font.underline ] (text "Graph game") }
+        , link [ paddingXY 20 0 ] { url = "/graph", label = el [ Font.underline ] (text "Graph") }
+        , link [ paddingXY 20 0 ] { url = "/snake", label = el [ Font.underline ] (text "Snake") }
         ]
 
 
@@ -143,15 +171,6 @@ homeView =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model.page ) of
-        ( GraphMsg subMsg, GraphPage pageModel ) ->
-            let
-                ( updatedPageModel, updatedCmd ) =
-                    Graph.update subMsg pageModel
-            in
-            ( { model | page = GraphPage updatedPageModel }
-            , Cmd.map GraphMsg updatedCmd
-            )
-
         ( LinkClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
@@ -171,6 +190,24 @@ update msg model =
             in
             ( { model | route = newRoute }, Cmd.none )
                 |> initCurrentPage
+
+        ( GraphMsg subMsg, GraphPage pageModel ) ->
+            let
+                ( updatedPageModel, updatedCmd ) =
+                    Graph.update subMsg pageModel
+            in
+            ( { model | page = GraphPage updatedPageModel }
+            , Cmd.map GraphMsg updatedCmd
+            )
+
+        ( SnakeMsg subMsg, SnakePage pageModel ) ->
+            let
+                ( updatedPageModel, updatedCmd ) =
+                    Snake.update subMsg pageModel
+            in
+            ( { model | page = SnakePage updatedPageModel }
+            , Cmd.map SnakeMsg updatedCmd
+            )
 
         ( _, _ ) ->
             ( model, Cmd.none )

@@ -1,7 +1,5 @@
 module Page.Graph exposing (Model, Msg, init, update, view)
 
-import Browser
-import Browser.Events
 import Dict
 import Element exposing (..)
 import Element.Background as Background
@@ -10,8 +8,8 @@ import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
-import Html exposing (Html)
 import Html.Attributes
+import Page.Colors exposing (darkBlue, grey, lightBlue, white)
 import Page.GameBoard exposing (GameBoard, Shape(..))
 import Page.TileSvg
 import Random
@@ -30,26 +28,6 @@ minBoardSize =
 maxBoardSize : Int
 maxBoardSize =
     20
-
-
-darkBlue : Color
-darkBlue =
-    rgb255 17 43 60
-
-
-lightBlue : Color
-lightBlue =
-    rgb255 32 83 117
-
-
-white : Color
-white =
-    rgb 1 1 1
-
-
-grey : Color
-grey =
-    rgb255 150 150 150
 
 
 headerHeight : Int
@@ -98,10 +76,6 @@ type alias Model =
     }
 
 
-
--- Int
-
-
 init : Flags -> ( Model, Cmd Msg )
 init { number, windowWidth, windowHeight } =
     let
@@ -121,15 +95,6 @@ init { number, windowWidth, windowHeight } =
       }
     , Cmd.none
     )
-
-
-
--- Subscriptions
-
-
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Browser.Events.onResize (\width height -> WindowResized width height)
 
 
 

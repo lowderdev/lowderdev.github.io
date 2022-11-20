@@ -8,6 +8,7 @@ type Route
     = NotFound
     | HomeRoute
     | GraphRoute
+    | SnakeRoute
 
 
 parseUrl : Url -> Route
@@ -25,4 +26,5 @@ matchRoute =
     oneOf
         [ map HomeRoute top
         , map GraphRoute (s "graph")
+        , map SnakeRoute (s "snake")
         ]

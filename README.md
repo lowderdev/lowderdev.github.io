@@ -19,7 +19,7 @@ Install, `elm`, `elm-live`, and then run `elm-live`
 
 ```shell
 npm install -g elm elm-live
-elm-live src/Main.elm -- --output=main.js
+elm-live src/Main.elm --pushstate -- --output=main.js
 ```
 
 Then visit [http://localhost:8000](http://localhost:8000)

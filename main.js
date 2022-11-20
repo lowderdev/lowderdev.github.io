@@ -5260,6 +5260,12 @@ var $author$project$Main$GraphPage = function (a) {
 	return {$: 'GraphPage', a: a};
 };
 var $author$project$Main$HomePage = {$: 'HomePage'};
+var $author$project$Main$SnakeMsg = function (a) {
+	return {$: 'SnakeMsg', a: a};
+};
+var $author$project$Main$SnakePage = function (a) {
+	return {$: 'SnakePage', a: a};
+};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $author$project$Page$Graph$defaultBoardSize = 4;
 var $elm$core$Basics$min = F2(
@@ -6294,6 +6300,94 @@ var $author$project$Page$Graph$init = function (_v0) {
 		},
 		$elm$core$Platform$Cmd$none);
 };
+var $author$project$Page$Snake$Empty = {$: 'Empty'};
+var $author$project$Page$Snake$Snake = {$: 'Snake'};
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $elm$core$List$concatMap = F2(
+	function (f, list) {
+		return $elm$core$List$concat(
+			A2($elm$core$List$map, f, list));
+	});
+var $elm_community$list_extra$List$Extra$andThen = $elm$core$List$concatMap;
+var $elm_community$list_extra$List$Extra$lift2 = F3(
+	function (f, la, lb) {
+		return A2(
+			$elm_community$list_extra$List$Extra$andThen,
+			function (a) {
+				return A2(
+					$elm_community$list_extra$List$Extra$andThen,
+					function (b) {
+						return _List_fromArray(
+							[
+								A2(f, a, b)
+							]);
+					},
+					lb);
+			},
+			la);
+	});
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $author$project$Page$Snake$cartesian = F2(
+	function (xs, ys) {
+		return A3($elm_community$list_extra$List$Extra$lift2, $elm$core$Tuple$pair, xs, ys);
+	});
+var $elm$core$Dict$fromList = function (assocs) {
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (_v0, dict) {
+				var key = _v0.a;
+				var value = _v0.b;
+				return A3($elm$core$Dict$insert, key, value, dict);
+			}),
+		$elm$core$Dict$empty,
+		assocs);
+};
+var $author$project$Page$Snake$init = function (_v0) {
+	var boardSize = 5;
+	var coordList = A2($elm$core$List$range, 0, boardSize - 1);
+	var emptyGrid = $elm$core$Dict$fromList(
+		A2(
+			$elm$core$List$map,
+			function (coord) {
+				return _Utils_Tuple2(coord, $author$project$Page$Snake$Empty);
+			},
+			A2($author$project$Page$Snake$cartesian, coordList, coordList)));
+	var mid = (boardSize / 2) | 0;
+	var startingSnakeCoords = {
+		head: _Utils_Tuple2(mid, mid),
+		tail: _List_fromArray(
+			[
+				_Utils_Tuple2(mid, mid - 1),
+				_Utils_Tuple2(mid, mid - 2)
+			])
+	};
+	var snakePoints = A2($elm$core$List$cons, startingSnakeCoords.head, startingSnakeCoords.tail);
+	var gridWithSnake = A3(
+		$elm$core$List$foldl,
+		F2(
+			function (coord, newGrid) {
+				return A3($elm$core$Dict$insert, coord, $author$project$Page$Snake$Snake, newGrid);
+			}),
+		emptyGrid,
+		snakePoints);
+	return _Utils_Tuple2(
+		{boardSize: boardSize, gameOver: false, grid: gridWithSnake, snakeCoords: startingSnakeCoords},
+		$elm$core$Platform$Cmd$none);
+};
 var $elm$core$Platform$Cmd$map = _Platform_map;
 var $author$project$Main$initCurrentPage = function (_v0) {
 	var model = _v0.a;
@@ -6305,7 +6399,7 @@ var $author$project$Main$initCurrentPage = function (_v0) {
 				return _Utils_Tuple2($author$project$Main$NotFoundPage, $elm$core$Platform$Cmd$none);
 			case 'HomeRoute':
 				return _Utils_Tuple2($author$project$Main$HomePage, $elm$core$Platform$Cmd$none);
-			default:
+			case 'GraphRoute':
 				var _v3 = $author$project$Page$Graph$init(
 					{number: model.intTime, windowHeight: model.windowHeight, windowWidth: model.windowWidth});
 				var pageModel = _v3.a;
@@ -6313,6 +6407,14 @@ var $author$project$Main$initCurrentPage = function (_v0) {
 				return _Utils_Tuple2(
 					$author$project$Main$GraphPage(pageModel),
 					A2($elm$core$Platform$Cmd$map, $author$project$Main$GraphMsg, pageCmds));
+			default:
+				var _v4 = $author$project$Page$Snake$init(
+					{number: model.intTime, windowHeight: model.windowHeight, windowWidth: model.windowWidth});
+				var pageModel = _v4.a;
+				var pageCmds = _v4.b;
+				return _Utils_Tuple2(
+					$author$project$Main$SnakePage(pageModel),
+					A2($elm$core$Platform$Cmd$map, $author$project$Main$SnakeMsg, pageCmds));
 		}
 	}();
 	var currentPage = _v1.a;
@@ -6325,9 +6427,11 @@ var $author$project$Main$initCurrentPage = function (_v0) {
 			_List_fromArray(
 				[existingCmds, mappedPageCmds])));
 };
+var $elm$core$Debug$log = _Debug_log;
 var $author$project$Route$NotFound = {$: 'NotFound'};
 var $author$project$Route$GraphRoute = {$: 'GraphRoute'};
 var $author$project$Route$HomeRoute = {$: 'HomeRoute'};
+var $author$project$Route$SnakeRoute = {$: 'SnakeRoute'};
 var $elm$url$Url$Parser$Parser = function (a) {
 	return {$: 'Parser', a: a};
 };
@@ -6366,22 +6470,6 @@ var $elm$url$Url$Parser$map = F2(
 					parseArg(
 						A5($elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
 			});
-	});
-var $elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
-		}
-	});
-var $elm$core$List$concat = function (lists) {
-	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
-};
-var $elm$core$List$concatMap = F2(
-	function (f, list) {
-		return $elm$core$List$concat(
-			A2($elm$core$List$map, f, list));
 	});
 var $elm$url$Url$Parser$oneOf = function (parsers) {
 	return $elm$url$Url$Parser$Parser(
@@ -6433,7 +6521,11 @@ var $author$project$Route$matchRoute = $elm$url$Url$Parser$oneOf(
 			A2(
 			$elm$url$Url$Parser$map,
 			$author$project$Route$GraphRoute,
-			$elm$url$Url$Parser$s('graph'))
+			$elm$url$Url$Parser$s('graph')),
+			A2(
+			$elm$url$Url$Parser$map,
+			$author$project$Route$SnakeRoute,
+			$elm$url$Url$Parser$s('snake'))
 		]));
 var $elm$url$Url$Parser$getFirstMatch = function (states) {
 	getFirstMatch:
@@ -6559,24 +6651,6 @@ var $author$project$Route$parseUrl = function (url) {
 		return $author$project$Route$NotFound;
 	}
 };
-var $author$project$Main$init = F3(
-	function (flags, url, navKey) {
-		var model = {
-			intTime: flags.intTime,
-			navKey: navKey,
-			page: $author$project$Main$NotFoundPage,
-			route: $author$project$Route$parseUrl(url),
-			windowHeight: flags.windowHeight,
-			windowWidth: flags.windowWidth
-		};
-		return $author$project$Main$initCurrentPage(
-			_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
-	});
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $elm$browser$Browser$Navigation$load = _Browser_load;
-var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var $elm$url$Url$addPort = F2(
 	function (maybePort, starter) {
 		if (maybePort.$ === 'Nothing') {
@@ -6621,6 +6695,26 @@ var $elm$url$Url$toString = function (url) {
 					_Utils_ap(http, url.host)),
 				url.path)));
 };
+var $author$project$Main$init = F3(
+	function (flags, url, navKey) {
+		var model = {
+			intTime: flags.intTime,
+			navKey: navKey,
+			page: $author$project$Main$NotFoundPage,
+			route: $author$project$Route$parseUrl(url),
+			windowHeight: flags.windowHeight,
+			windowWidth: flags.windowWidth
+		};
+		var aurl = $elm$core$Debug$log(
+			$elm$url$Url$toString(url));
+		return $author$project$Main$initCurrentPage(
+			_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
+	});
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $elm$browser$Browser$Navigation$load = _Browser_load;
+var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var $author$project$Page$Graph$NewSeedReceived = function (a) {
 	return {$: 'NewSeedReceived', a: a};
 };
@@ -6895,54 +6989,130 @@ var $author$project$Page$Graph$update = F2(
 				return A3($author$project$Page$Graph$handleWindowResized, width, height, model);
 		}
 	});
+var $author$project$Page$Snake$update = F2(
+	function (msg, model) {
+		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple2(msg, model.page);
-		switch (_v0.a.$) {
-			case 'GraphMsg':
-				if (_v0.b.$ === 'GraphPage') {
-					var subMsg = _v0.a.a;
-					var pageModel = _v0.b.a;
-					var _v1 = A2($author$project$Page$Graph$update, subMsg, pageModel);
-					var updatedPageModel = _v1.a;
-					var updatedCmd = _v1.b;
-					return _Utils_Tuple2(
-						_Utils_update(
+		_v0$4:
+		while (true) {
+			switch (_v0.a.$) {
+				case 'LinkClicked':
+					var urlRequest = _v0.a.a;
+					if (urlRequest.$ === 'Internal') {
+						var url = urlRequest.a;
+						return _Utils_Tuple2(
 							model,
-							{
-								page: $author$project$Main$GraphPage(updatedPageModel)
-							}),
-						A2($elm$core$Platform$Cmd$map, $author$project$Main$GraphMsg, updatedCmd));
-				} else {
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				}
-			case 'LinkClicked':
-				var urlRequest = _v0.a.a;
-				if (urlRequest.$ === 'Internal') {
-					var url = urlRequest.a;
-					return _Utils_Tuple2(
-						model,
-						A2(
-							$elm$browser$Browser$Navigation$pushUrl,
-							model.navKey,
-							$elm$url$Url$toString(url)));
-				} else {
-					var url = urlRequest.a;
-					return _Utils_Tuple2(
-						model,
-						$elm$browser$Browser$Navigation$load(url));
-				}
-			default:
-				var url = _v0.a.a;
-				var newRoute = $author$project$Route$parseUrl(url);
-				return $author$project$Main$initCurrentPage(
-					_Utils_Tuple2(
-						_Utils_update(
+							A2(
+								$elm$browser$Browser$Navigation$pushUrl,
+								model.navKey,
+								$elm$url$Url$toString(url)));
+					} else {
+						var url = urlRequest.a;
+						return _Utils_Tuple2(
 							model,
-							{route: newRoute}),
-						$elm$core$Platform$Cmd$none));
+							$elm$browser$Browser$Navigation$load(url));
+					}
+				case 'UrlChanged':
+					var url = _v0.a.a;
+					var newRoute = $author$project$Route$parseUrl(url);
+					return $author$project$Main$initCurrentPage(
+						_Utils_Tuple2(
+							_Utils_update(
+								model,
+								{route: newRoute}),
+							$elm$core$Platform$Cmd$none));
+				case 'GraphMsg':
+					if (_v0.b.$ === 'GraphPage') {
+						var subMsg = _v0.a.a;
+						var pageModel = _v0.b.a;
+						var _v2 = A2($author$project$Page$Graph$update, subMsg, pageModel);
+						var updatedPageModel = _v2.a;
+						var updatedCmd = _v2.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									page: $author$project$Main$GraphPage(updatedPageModel)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Main$GraphMsg, updatedCmd));
+					} else {
+						break _v0$4;
+					}
+				default:
+					if (_v0.b.$ === 'SnakePage') {
+						var subMsg = _v0.a.a;
+						var pageModel = _v0.b.a;
+						var _v3 = A2($author$project$Page$Snake$update, subMsg, pageModel);
+						var updatedPageModel = _v3.a;
+						var updatedCmd = _v3.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									page: $author$project$Main$SnakePage(updatedPageModel)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Main$SnakeMsg, updatedCmd));
+					} else {
+						break _v0$4;
+					}
+			}
 		}
+		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	});
+var $mdgriffith$elm_ui$Internal$Model$Colored = F3(
+	function (a, b, c) {
+		return {$: 'Colored', a: a, b: b, c: c};
+	});
+var $mdgriffith$elm_ui$Internal$Model$StyleClass = F2(
+	function (a, b) {
+		return {$: 'StyleClass', a: a, b: b};
+	});
+var $mdgriffith$elm_ui$Internal$Flag$Flag = function (a) {
+	return {$: 'Flag', a: a};
+};
+var $mdgriffith$elm_ui$Internal$Flag$Second = function (a) {
+	return {$: 'Second', a: a};
+};
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $mdgriffith$elm_ui$Internal$Flag$flag = function (i) {
+	return (i > 31) ? $mdgriffith$elm_ui$Internal$Flag$Second(1 << (i - 32)) : $mdgriffith$elm_ui$Internal$Flag$Flag(1 << i);
+};
+var $mdgriffith$elm_ui$Internal$Flag$bgColor = $mdgriffith$elm_ui$Internal$Flag$flag(8);
+var $mdgriffith$elm_ui$Internal$Model$floatClass = function (x) {
+	return $elm$core$String$fromInt(
+		$elm$core$Basics$round(x * 255));
+};
+var $mdgriffith$elm_ui$Internal$Model$formatColorClass = function (_v0) {
+	var red = _v0.a;
+	var green = _v0.b;
+	var blue = _v0.c;
+	var alpha = _v0.d;
+	return $mdgriffith$elm_ui$Internal$Model$floatClass(red) + ('-' + ($mdgriffith$elm_ui$Internal$Model$floatClass(green) + ('-' + ($mdgriffith$elm_ui$Internal$Model$floatClass(blue) + ('-' + $mdgriffith$elm_ui$Internal$Model$floatClass(alpha))))));
+};
+var $mdgriffith$elm_ui$Element$Background$color = function (clr) {
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$bgColor,
+		A3(
+			$mdgriffith$elm_ui$Internal$Model$Colored,
+			'bg-' + $mdgriffith$elm_ui$Internal$Model$formatColorClass(clr),
+			'background-color',
+			clr));
+};
+var $mdgriffith$elm_ui$Internal$Flag$fontColor = $mdgriffith$elm_ui$Internal$Flag$flag(14);
+var $mdgriffith$elm_ui$Element$Font$color = function (fontColor) {
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$fontColor,
+		A3(
+			$mdgriffith$elm_ui$Internal$Model$Colored,
+			'fc-' + $mdgriffith$elm_ui$Internal$Model$formatColorClass(fontColor),
+			'color',
+			fontColor));
+};
 var $mdgriffith$elm_ui$Internal$Model$AlignX = function (a) {
 	return {$: 'AlignX', a: a};
 };
@@ -7057,16 +7227,6 @@ var $mdgriffith$elm_ui$Internal$Model$AsEl = {$: 'AsEl'};
 var $mdgriffith$elm_ui$Internal$Model$asEl = $mdgriffith$elm_ui$Internal$Model$AsEl;
 var $mdgriffith$elm_ui$Internal$Model$AsParagraph = {$: 'AsParagraph'};
 var $mdgriffith$elm_ui$Internal$Model$asParagraph = $mdgriffith$elm_ui$Internal$Model$AsParagraph;
-var $mdgriffith$elm_ui$Internal$Flag$Flag = function (a) {
-	return {$: 'Flag', a: a};
-};
-var $mdgriffith$elm_ui$Internal$Flag$Second = function (a) {
-	return {$: 'Second', a: a};
-};
-var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
-var $mdgriffith$elm_ui$Internal$Flag$flag = function (i) {
-	return (i > 31) ? $mdgriffith$elm_ui$Internal$Flag$Second(1 << (i - 32)) : $mdgriffith$elm_ui$Internal$Flag$Flag(1 << i);
-};
 var $mdgriffith$elm_ui$Internal$Flag$alignBottom = $mdgriffith$elm_ui$Internal$Flag$flag(41);
 var $mdgriffith$elm_ui$Internal$Flag$alignRight = $mdgriffith$elm_ui$Internal$Flag$flag(40);
 var $mdgriffith$elm_ui$Internal$Flag$centerX = $mdgriffith$elm_ui$Internal$Flag$flag(42);
@@ -7108,10 +7268,6 @@ var $mdgriffith$elm_ui$Internal$Model$lengthClassName = function (x) {
 var $elm$core$Tuple$second = function (_v0) {
 	var y = _v0.b;
 	return y;
-};
-var $mdgriffith$elm_ui$Internal$Model$floatClass = function (x) {
-	return $elm$core$String$fromInt(
-		$elm$core$Basics$round(x * 255));
 };
 var $mdgriffith$elm_ui$Internal$Model$transformClass = function (transform) {
 	switch (transform.$) {
@@ -12445,10 +12601,6 @@ var $mdgriffith$elm_ui$Internal$Model$PaddingStyle = F5(
 	function (a, b, c, d, e) {
 		return {$: 'PaddingStyle', a: a, b: b, c: c, d: d, e: e};
 	});
-var $mdgriffith$elm_ui$Internal$Model$StyleClass = F2(
-	function (a, b) {
-		return {$: 'StyleClass', a: a, b: b};
-	});
 var $mdgriffith$elm_ui$Internal$Flag$padding = $mdgriffith$elm_ui$Internal$Flag$flag(2);
 var $mdgriffith$elm_ui$Element$padding = function (x) {
 	var f = x;
@@ -12527,8 +12679,22 @@ var $author$project$Main$homeView = A2(
 					$mdgriffith$elm_ui$Element$el,
 					_List_fromArray(
 						[$mdgriffith$elm_ui$Element$Font$underline]),
-					$mdgriffith$elm_ui$Element$text('Graph game')),
+					$mdgriffith$elm_ui$Element$text('Graph')),
 				url: '/graph'
+			}),
+			A2(
+			$mdgriffith$elm_ui$Element$link,
+			_List_fromArray(
+				[
+					A2($mdgriffith$elm_ui$Element$paddingXY, 20, 0)
+				]),
+			{
+				label: A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$Font$underline]),
+					$mdgriffith$elm_ui$Element$text('Snake')),
+				url: '/snake'
 			})
 		]));
 var $mdgriffith$elm_ui$Internal$Model$Empty = {$: 'Empty'};
@@ -12598,39 +12764,6 @@ var $author$project$Main$notFoundView = A2(
 			_List_Nil,
 			$mdgriffith$elm_ui$Element$text('Oops! The page you requested was not found!'))
 		]));
-var $mdgriffith$elm_ui$Internal$Model$Colored = F3(
-	function (a, b, c) {
-		return {$: 'Colored', a: a, b: b, c: c};
-	});
-var $mdgriffith$elm_ui$Internal$Flag$bgColor = $mdgriffith$elm_ui$Internal$Flag$flag(8);
-var $mdgriffith$elm_ui$Internal$Model$formatColorClass = function (_v0) {
-	var red = _v0.a;
-	var green = _v0.b;
-	var blue = _v0.c;
-	var alpha = _v0.d;
-	return $mdgriffith$elm_ui$Internal$Model$floatClass(red) + ('-' + ($mdgriffith$elm_ui$Internal$Model$floatClass(green) + ('-' + ($mdgriffith$elm_ui$Internal$Model$floatClass(blue) + ('-' + $mdgriffith$elm_ui$Internal$Model$floatClass(alpha))))));
-};
-var $mdgriffith$elm_ui$Element$Background$color = function (clr) {
-	return A2(
-		$mdgriffith$elm_ui$Internal$Model$StyleClass,
-		$mdgriffith$elm_ui$Internal$Flag$bgColor,
-		A3(
-			$mdgriffith$elm_ui$Internal$Model$Colored,
-			'bg-' + $mdgriffith$elm_ui$Internal$Model$formatColorClass(clr),
-			'background-color',
-			clr));
-};
-var $mdgriffith$elm_ui$Internal$Flag$fontColor = $mdgriffith$elm_ui$Internal$Flag$flag(14);
-var $mdgriffith$elm_ui$Element$Font$color = function (fontColor) {
-	return A2(
-		$mdgriffith$elm_ui$Internal$Model$StyleClass,
-		$mdgriffith$elm_ui$Internal$Flag$fontColor,
-		A3(
-			$mdgriffith$elm_ui$Internal$Model$Colored,
-			'fc-' + $mdgriffith$elm_ui$Internal$Model$formatColorClass(fontColor),
-			'color',
-			fontColor));
-};
 var $mdgriffith$elm_ui$Internal$Model$Rgba = F4(
 	function (a, b, c, d) {
 		return {$: 'Rgba', a: a, b: b, c: c, d: d};
@@ -12639,7 +12772,7 @@ var $mdgriffith$elm_ui$Element$rgb255 = F3(
 	function (red, green, blue) {
 		return A4($mdgriffith$elm_ui$Internal$Model$Rgba, red / 255, green / 255, blue / 255, 1);
 	});
-var $author$project$Page$Graph$darkBlue = A3($mdgriffith$elm_ui$Element$rgb255, 17, 43, 60);
+var $author$project$Page$Colors$darkBlue = A3($mdgriffith$elm_ui$Element$rgb255, 17, 43, 60);
 var $mdgriffith$elm_ui$Internal$Model$Fill = function (a) {
 	return {$: 'Fill', a: a};
 };
@@ -12648,7 +12781,7 @@ var $mdgriffith$elm_ui$Element$rgb = F3(
 	function (r, g, b) {
 		return A4($mdgriffith$elm_ui$Internal$Model$Rgba, r, g, b, 1);
 	});
-var $author$project$Page$Graph$white = A3($mdgriffith$elm_ui$Element$rgb, 1, 1, 1);
+var $author$project$Page$Colors$white = A3($mdgriffith$elm_ui$Element$rgb, 1, 1, 1);
 var $author$project$Page$Graph$viewBody = function (contents) {
 	return A2(
 		$mdgriffith$elm_ui$Element$column,
@@ -12656,8 +12789,8 @@ var $author$project$Page$Graph$viewBody = function (contents) {
 			[
 				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 				$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Graph$darkBlue),
-				$mdgriffith$elm_ui$Element$Font$color($author$project$Page$Graph$white)
+				$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Colors$darkBlue),
+				$mdgriffith$elm_ui$Element$Font$color($author$project$Page$Colors$white)
 			]),
 		contents);
 };
@@ -12859,7 +12992,7 @@ var $author$project$Page$TileSvg$knobSvg = function (tileSize) {
 				_List_Nil)
 			]));
 };
-var $author$project$Page$Graph$lightBlue = A3($mdgriffith$elm_ui$Element$rgb255, 32, 83, 117);
+var $author$project$Page$Colors$lightBlue = A3($mdgriffith$elm_ui$Element$rgb255, 32, 83, 117);
 var $mdgriffith$elm_ui$Element$none = $mdgriffith$elm_ui$Internal$Model$Empty;
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
@@ -12972,10 +13105,10 @@ var $author$project$Page$Graph$viewCell = F3(
 					$mdgriffith$elm_ui$Element$centerX,
 					$mdgriffith$elm_ui$Element$centerY,
 					$mdgriffith$elm_ui$Element$Border$width($author$project$Page$TileSvg$borderWidth),
-					$mdgriffith$elm_ui$Element$Border$color($author$project$Page$Graph$darkBlue),
+					$mdgriffith$elm_ui$Element$Border$color($author$project$Page$Colors$darkBlue),
 					$mdgriffith$elm_ui$Element$Border$rounded(
 					(tileSize < 80) ? 2 : 6),
-					$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Graph$lightBlue),
+					$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Colors$lightBlue),
 					$mdgriffith$elm_ui$Element$rotate(
 					$elm$core$Basics$degrees((cell.initRotations + cell.rotations) * 90)),
 					$mdgriffith$elm_ui$Element$htmlAttribute(
@@ -13162,7 +13295,7 @@ var $author$project$Page$Graph$viewGameWindow = F2(
 					$mdgriffith$elm_ui$Element$centerX,
 					$mdgriffith$elm_ui$Element$padding(40),
 					$mdgriffith$elm_ui$Element$Border$width($author$project$Page$TileSvg$borderWidth),
-					$mdgriffith$elm_ui$Element$Border$color($author$project$Page$Graph$darkBlue)
+					$mdgriffith$elm_ui$Element$Border$color($author$project$Page$Colors$darkBlue)
 				]),
 			renderedRows);
 	});
@@ -13191,7 +13324,7 @@ var $mdgriffith$elm_ui$Element$spacing = function (x) {
 			x));
 };
 var $author$project$Page$Graph$BoardSizeDecreased = {$: 'BoardSizeDecreased'};
-var $author$project$Page$Graph$grey = A3($mdgriffith$elm_ui$Element$rgb255, 150, 150, 150);
+var $author$project$Page$Colors$grey = A3($mdgriffith$elm_ui$Element$rgb255, 150, 150, 150);
 var $mdgriffith$elm_ui$Internal$Model$Button = {$: 'Button'};
 var $mdgriffith$elm_ui$Internal$Model$Describe = function (a) {
 	return {$: 'Describe', a: a};
@@ -13353,13 +13486,13 @@ var $author$project$Page$Graph$viewBoardSizeButton = F2(
 var $author$project$Page$Graph$viewDecBoardSizeButton = function (model) {
 	return (_Utils_cmp(model.boardSize, $author$project$Page$Graph$minBoardSize) < 1) ? A2(
 		$author$project$Page$Graph$viewBoardSizeButton,
-		$author$project$Page$Graph$grey,
+		$author$project$Page$Colors$grey,
 		{
 			label: $mdgriffith$elm_ui$Element$text('-'),
 			onPress: $elm$core$Maybe$Nothing
 		}) : A2(
 		$author$project$Page$Graph$viewBoardSizeButton,
-		$author$project$Page$Graph$lightBlue,
+		$author$project$Page$Colors$lightBlue,
 		{
 			label: $mdgriffith$elm_ui$Element$text('-'),
 			onPress: $elm$core$Maybe$Just($author$project$Page$Graph$BoardSizeDecreased)
@@ -13369,13 +13502,13 @@ var $author$project$Page$Graph$BoardSizeIncreased = {$: 'BoardSizeIncreased'};
 var $author$project$Page$Graph$viewIncBoardSizeButton = function (model) {
 	return (_Utils_cmp(model.boardSize, $author$project$Page$Graph$maxBoardSize) > -1) ? A2(
 		$author$project$Page$Graph$viewBoardSizeButton,
-		$author$project$Page$Graph$grey,
+		$author$project$Page$Colors$grey,
 		{
 			label: $mdgriffith$elm_ui$Element$text('+'),
 			onPress: $elm$core$Maybe$Nothing
 		}) : A2(
 		$author$project$Page$Graph$viewBoardSizeButton,
-		$author$project$Page$Graph$lightBlue,
+		$author$project$Page$Colors$lightBlue,
 		{
 			label: $mdgriffith$elm_ui$Element$text('+'),
 			onPress: $elm$core$Maybe$Just($author$project$Page$Graph$BoardSizeIncreased)
@@ -13392,7 +13525,7 @@ var $author$project$Page$Graph$viewNewButton = A2(
 			$mdgriffith$elm_ui$Element$Font$center,
 			$mdgriffith$elm_ui$Element$padding(10),
 			$mdgriffith$elm_ui$Element$Border$rounded(6),
-			$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Graph$lightBlue),
+			$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Colors$lightBlue),
 			$mdgriffith$elm_ui$Element$htmlAttribute(
 			A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation'))
 		]),
@@ -13412,7 +13545,7 @@ var $author$project$Page$Graph$viewUndoButton = function (model) {
 				$mdgriffith$elm_ui$Element$Font$center,
 				$mdgriffith$elm_ui$Element$padding(10),
 				$mdgriffith$elm_ui$Element$Border$rounded(6),
-				$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Graph$lightBlue),
+				$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Colors$lightBlue),
 				$mdgriffith$elm_ui$Element$htmlAttribute(
 				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation'))
 			]),
@@ -13466,7 +13599,7 @@ var $author$project$Page$Graph$viewWinMessage = function (model) {
 							$mdgriffith$elm_ui$Element$centerX,
 							$mdgriffith$elm_ui$Element$Font$center,
 							$mdgriffith$elm_ui$Element$Border$rounded(6),
-							$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Graph$lightBlue)
+							$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Colors$lightBlue)
 						]),
 					{
 						label: $mdgriffith$elm_ui$Element$text('Play Again'),
@@ -13534,6 +13667,89 @@ var $author$project$Page$Graph$view = function (model) {
 				A2($author$project$Page$Graph$viewGameWindow, boardSize, tiles)
 			]));
 };
+var $elm_community$list_extra$List$Extra$groupsOfWithStep = F3(
+	function (size, step, list) {
+		if ((size <= 0) || (step <= 0)) {
+			return _List_Nil;
+		} else {
+			var go = F2(
+				function (xs, acc) {
+					go:
+					while (true) {
+						if ($elm$core$List$isEmpty(xs)) {
+							return $elm$core$List$reverse(acc);
+						} else {
+							var thisGroup = A2($elm$core$List$take, size, xs);
+							if (_Utils_eq(
+								size,
+								$elm$core$List$length(thisGroup))) {
+								var rest = A2($elm$core$List$drop, step, xs);
+								var $temp$xs = rest,
+									$temp$acc = A2($elm$core$List$cons, thisGroup, acc);
+								xs = $temp$xs;
+								acc = $temp$acc;
+								continue go;
+							} else {
+								return $elm$core$List$reverse(acc);
+							}
+						}
+					}
+				});
+			return A2(go, list, _List_Nil);
+		}
+	});
+var $elm_community$list_extra$List$Extra$groupsOf = F2(
+	function (size, xs) {
+		return A3($elm_community$list_extra$List$Extra$groupsOfWithStep, size, size, xs);
+	});
+var $author$project$Page$Snake$viewCell = function (cell) {
+	return A2(
+		$mdgriffith$elm_ui$Element$el,
+		_List_fromArray(
+			[
+				$mdgriffith$elm_ui$Element$centerX,
+				$mdgriffith$elm_ui$Element$centerY,
+				$mdgriffith$elm_ui$Element$width(
+				$mdgriffith$elm_ui$Element$px(80)),
+				$mdgriffith$elm_ui$Element$height(
+				$mdgriffith$elm_ui$Element$px(80)),
+				$mdgriffith$elm_ui$Element$Border$width(1),
+				$mdgriffith$elm_ui$Element$Border$color($author$project$Page$Colors$darkBlue),
+				$mdgriffith$elm_ui$Element$Border$rounded(2),
+				$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Colors$lightBlue),
+				$mdgriffith$elm_ui$Element$htmlAttribute(
+				A2($elm$html$Html$Attributes$style, 'touch-action', 'manipulation'))
+			]),
+		function () {
+			switch (cell.$) {
+				case 'Empty':
+					return $mdgriffith$elm_ui$Element$none;
+				case 'Snake':
+					return $mdgriffith$elm_ui$Element$text('s');
+				default:
+					return $mdgriffith$elm_ui$Element$text('f');
+			}
+		}());
+};
+var $author$project$Page$Snake$viewRow = function (cellRow) {
+	return A2(
+		$mdgriffith$elm_ui$Element$row,
+		_List_Nil,
+		A2($elm$core$List$map, $author$project$Page$Snake$viewCell, cellRow));
+};
+var $author$project$Page$Snake$view = function (_v0) {
+	var boardSize = _v0.boardSize;
+	var grid = _v0.grid;
+	var rows = A2(
+		$elm_community$list_extra$List$Extra$groupsOf,
+		boardSize,
+		$elm$core$Dict$values(grid));
+	return A2(
+		$mdgriffith$elm_ui$Element$column,
+		_List_fromArray(
+			[$mdgriffith$elm_ui$Element$centerX, $mdgriffith$elm_ui$Element$centerY]),
+		A2($elm$core$List$map, $author$project$Page$Snake$viewRow, rows));
+};
 var $author$project$Main$currentView = function (model) {
 	var _v0 = model.page;
 	switch (_v0.$) {
@@ -13541,12 +13757,18 @@ var $author$project$Main$currentView = function (model) {
 			return $author$project$Main$notFoundView;
 		case 'HomePage':
 			return $author$project$Main$homeView;
-		default:
+		case 'GraphPage':
 			var pageModel = _v0.a;
 			return A2(
 				$mdgriffith$elm_ui$Element$map,
 				$author$project$Main$GraphMsg,
 				$author$project$Page$Graph$view(pageModel));
+		default:
+			var pageModel = _v0.a;
+			return A2(
+				$mdgriffith$elm_ui$Element$map,
+				$author$project$Main$SnakeMsg,
+				$author$project$Page$Snake$view(pageModel));
 	}
 };
 var $mdgriffith$elm_ui$Internal$Model$OnlyDynamic = F2(
@@ -13807,7 +14029,11 @@ var $author$project$Main$view = function (model) {
 			[
 				A2(
 				$mdgriffith$elm_ui$Element$layout,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$Background$color($author$project$Page$Colors$darkBlue),
+						$mdgriffith$elm_ui$Element$Font$color($author$project$Page$Colors$white)
+					]),
 				$author$project$Main$currentView(model))
 			]),
 		title: 'lowderdev'
