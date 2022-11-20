@@ -6300,6 +6300,7 @@ var $author$project$Page$Graph$init = function (_v0) {
 		},
 		$elm$core$Platform$Cmd$none);
 };
+var $author$project$Page$Snake$E = {$: 'E'};
 var $author$project$Page$Snake$Empty = {$: 'Empty'};
 var $author$project$Page$Snake$Snake = {$: 'Snake'};
 var $elm$core$List$append = F2(
@@ -6356,16 +6357,29 @@ var $elm$core$Dict$fromList = function (assocs) {
 		$elm$core$Dict$empty,
 		assocs);
 };
+var $author$project$Page$Snake$buildGrid = F2(
+	function (boardSize, snakeCoords) {
+		var snakePoints = A2($elm$core$List$cons, snakeCoords.head, snakeCoords.tail);
+		var coordList = A2($elm$core$List$range, 0, boardSize - 1);
+		var emptyGrid = $elm$core$Dict$fromList(
+			A2(
+				$elm$core$List$map,
+				function (coord) {
+					return _Utils_Tuple2(coord, $author$project$Page$Snake$Empty);
+				},
+				A2($author$project$Page$Snake$cartesian, coordList, coordList)));
+		var gridWithSnake = A3(
+			$elm$core$List$foldl,
+			F2(
+				function (coord, newGrid) {
+					return A3($elm$core$Dict$insert, coord, $author$project$Page$Snake$Snake, newGrid);
+				}),
+			emptyGrid,
+			snakePoints);
+		return gridWithSnake;
+	});
 var $author$project$Page$Snake$init = function (_v0) {
 	var boardSize = 5;
-	var coordList = A2($elm$core$List$range, 0, boardSize - 1);
-	var emptyGrid = $elm$core$Dict$fromList(
-		A2(
-			$elm$core$List$map,
-			function (coord) {
-				return _Utils_Tuple2(coord, $author$project$Page$Snake$Empty);
-			},
-			A2($author$project$Page$Snake$cartesian, coordList, coordList)));
 	var mid = (boardSize / 2) | 0;
 	var startingSnakeCoords = {
 		head: _Utils_Tuple2(mid, mid),
@@ -6375,17 +6389,9 @@ var $author$project$Page$Snake$init = function (_v0) {
 				_Utils_Tuple2(mid, mid - 2)
 			])
 	};
-	var snakePoints = A2($elm$core$List$cons, startingSnakeCoords.head, startingSnakeCoords.tail);
-	var gridWithSnake = A3(
-		$elm$core$List$foldl,
-		F2(
-			function (coord, newGrid) {
-				return A3($elm$core$Dict$insert, coord, $author$project$Page$Snake$Snake, newGrid);
-			}),
-		emptyGrid,
-		snakePoints);
+	var gridWithSnake = A2($author$project$Page$Snake$buildGrid, boardSize, startingSnakeCoords);
 	return _Utils_Tuple2(
-		{boardSize: boardSize, gameOver: false, grid: gridWithSnake, snakeCoords: startingSnakeCoords},
+		{boardSize: boardSize, gameOver: false, grid: gridWithSnake, moveDelta: 0, moveDir: $author$project$Page$Snake$E, snakeCoords: startingSnakeCoords},
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$core$Platform$Cmd$map = _Platform_map;
@@ -6427,7 +6433,6 @@ var $author$project$Main$initCurrentPage = function (_v0) {
 			_List_fromArray(
 				[existingCmds, mappedPageCmds])));
 };
-var $elm$core$Debug$log = _Debug_log;
 var $author$project$Route$NotFound = {$: 'NotFound'};
 var $author$project$Route$GraphRoute = {$: 'GraphRoute'};
 var $author$project$Route$HomeRoute = {$: 'HomeRoute'};
@@ -6651,6 +6656,177 @@ var $author$project$Route$parseUrl = function (url) {
 		return $author$project$Route$NotFound;
 	}
 };
+var $author$project$Main$init = F3(
+	function (flags, url, navKey) {
+		var model = {
+			intTime: flags.intTime,
+			navKey: navKey,
+			page: $author$project$Main$NotFoundPage,
+			route: $author$project$Route$parseUrl(url),
+			windowHeight: flags.windowHeight,
+			windowWidth: flags.windowWidth
+		};
+		return $author$project$Main$initCurrentPage(
+			_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
+	});
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$core$Platform$Sub$map = _Platform_map;
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Page$Snake$Tick = function (a) {
+	return {$: 'Tick', a: a};
+};
+var $elm$browser$Browser$AnimationManager$Delta = function (a) {
+	return {$: 'Delta', a: a};
+};
+var $elm$browser$Browser$AnimationManager$State = F3(
+	function (subs, request, oldTime) {
+		return {oldTime: oldTime, request: request, subs: subs};
+	});
+var $elm$browser$Browser$AnimationManager$init = $elm$core$Task$succeed(
+	A3($elm$browser$Browser$AnimationManager$State, _List_Nil, $elm$core$Maybe$Nothing, 0));
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$browser$Browser$AnimationManager$now = _Browser_now(_Utils_Tuple0);
+var $elm$browser$Browser$AnimationManager$rAF = _Browser_rAF(_Utils_Tuple0);
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$core$Process$spawn = _Scheduler_spawn;
+var $elm$browser$Browser$AnimationManager$onEffects = F3(
+	function (router, subs, _v0) {
+		var request = _v0.request;
+		var oldTime = _v0.oldTime;
+		var _v1 = _Utils_Tuple2(request, subs);
+		if (_v1.a.$ === 'Nothing') {
+			if (!_v1.b.b) {
+				var _v2 = _v1.a;
+				return $elm$browser$Browser$AnimationManager$init;
+			} else {
+				var _v4 = _v1.a;
+				return A2(
+					$elm$core$Task$andThen,
+					function (pid) {
+						return A2(
+							$elm$core$Task$andThen,
+							function (time) {
+								return $elm$core$Task$succeed(
+									A3(
+										$elm$browser$Browser$AnimationManager$State,
+										subs,
+										$elm$core$Maybe$Just(pid),
+										time));
+							},
+							$elm$browser$Browser$AnimationManager$now);
+					},
+					$elm$core$Process$spawn(
+						A2(
+							$elm$core$Task$andThen,
+							$elm$core$Platform$sendToSelf(router),
+							$elm$browser$Browser$AnimationManager$rAF)));
+			}
+		} else {
+			if (!_v1.b.b) {
+				var pid = _v1.a.a;
+				return A2(
+					$elm$core$Task$andThen,
+					function (_v3) {
+						return $elm$browser$Browser$AnimationManager$init;
+					},
+					$elm$core$Process$kill(pid));
+			} else {
+				return $elm$core$Task$succeed(
+					A3($elm$browser$Browser$AnimationManager$State, subs, request, oldTime));
+			}
+		}
+	});
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $elm$browser$Browser$AnimationManager$onSelfMsg = F3(
+	function (router, newTime, _v0) {
+		var subs = _v0.subs;
+		var oldTime = _v0.oldTime;
+		var send = function (sub) {
+			if (sub.$ === 'Time') {
+				var tagger = sub.a;
+				return A2(
+					$elm$core$Platform$sendToApp,
+					router,
+					tagger(
+						$elm$time$Time$millisToPosix(newTime)));
+			} else {
+				var tagger = sub.a;
+				return A2(
+					$elm$core$Platform$sendToApp,
+					router,
+					tagger(newTime - oldTime));
+			}
+		};
+		return A2(
+			$elm$core$Task$andThen,
+			function (pid) {
+				return A2(
+					$elm$core$Task$andThen,
+					function (_v1) {
+						return $elm$core$Task$succeed(
+							A3(
+								$elm$browser$Browser$AnimationManager$State,
+								subs,
+								$elm$core$Maybe$Just(pid),
+								newTime));
+					},
+					$elm$core$Task$sequence(
+						A2($elm$core$List$map, send, subs)));
+			},
+			$elm$core$Process$spawn(
+				A2(
+					$elm$core$Task$andThen,
+					$elm$core$Platform$sendToSelf(router),
+					$elm$browser$Browser$AnimationManager$rAF)));
+	});
+var $elm$browser$Browser$AnimationManager$Time = function (a) {
+	return {$: 'Time', a: a};
+};
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$browser$Browser$AnimationManager$subMap = F2(
+	function (func, sub) {
+		if (sub.$ === 'Time') {
+			var tagger = sub.a;
+			return $elm$browser$Browser$AnimationManager$Time(
+				A2($elm$core$Basics$composeL, func, tagger));
+		} else {
+			var tagger = sub.a;
+			return $elm$browser$Browser$AnimationManager$Delta(
+				A2($elm$core$Basics$composeL, func, tagger));
+		}
+	});
+_Platform_effectManagers['Browser.AnimationManager'] = _Platform_createManager($elm$browser$Browser$AnimationManager$init, $elm$browser$Browser$AnimationManager$onEffects, $elm$browser$Browser$AnimationManager$onSelfMsg, 0, $elm$browser$Browser$AnimationManager$subMap);
+var $elm$browser$Browser$AnimationManager$subscription = _Platform_leaf('Browser.AnimationManager');
+var $elm$browser$Browser$AnimationManager$onAnimationFrameDelta = function (tagger) {
+	return $elm$browser$Browser$AnimationManager$subscription(
+		$elm$browser$Browser$AnimationManager$Delta(tagger));
+};
+var $elm$browser$Browser$Events$onAnimationFrameDelta = $elm$browser$Browser$AnimationManager$onAnimationFrameDelta;
+var $author$project$Page$Snake$subscriptions = function (model) {
+	return $elm$browser$Browser$Events$onAnimationFrameDelta($author$project$Page$Snake$Tick);
+};
+var $author$project$Main$subscriptions = function (_v0) {
+	var page = _v0.page;
+	if (page.$ === 'SnakePage') {
+		var pageModel = page.a;
+		return A2(
+			$elm$core$Platform$Sub$map,
+			$author$project$Main$SnakeMsg,
+			$author$project$Page$Snake$subscriptions(pageModel));
+	} else {
+		return $elm$core$Platform$Sub$none;
+	}
+};
+var $elm$browser$Browser$Navigation$load = _Browser_load;
+var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var $elm$url$Url$addPort = F2(
 	function (maybePort, starter) {
 		if (maybePort.$ === 'Nothing') {
@@ -6695,26 +6871,6 @@ var $elm$url$Url$toString = function (url) {
 					_Utils_ap(http, url.host)),
 				url.path)));
 };
-var $author$project$Main$init = F3(
-	function (flags, url, navKey) {
-		var model = {
-			intTime: flags.intTime,
-			navKey: navKey,
-			page: $author$project$Main$NotFoundPage,
-			route: $author$project$Route$parseUrl(url),
-			windowHeight: flags.windowHeight,
-			windowWidth: flags.windowWidth
-		};
-		var aurl = $elm$core$Debug$log(
-			$elm$url$Url$toString(url));
-		return $author$project$Main$initCurrentPage(
-			_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
-	});
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $elm$browser$Browser$Navigation$load = _Browser_load;
-var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var $author$project$Page$Graph$NewSeedReceived = function (a) {
 	return {$: 'NewSeedReceived', a: a};
 };
@@ -6732,10 +6888,6 @@ var $elm$time$Time$Zone = F2(
 		return {$: 'Zone', a: a, b: b};
 	});
 var $elm$time$Time$customZone = $elm$time$Time$Zone;
-var $elm$time$Time$Posix = function (a) {
-	return {$: 'Posix', a: a};
-};
-var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
 var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
 var $elm$time$Time$posixToMillis = function (_v0) {
 	var millis = _v0.a;
@@ -6855,11 +7007,6 @@ var $elm$core$List$any = F2(
 				}
 			}
 		}
-	});
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
 	});
 var $elm$core$List$all = F2(
 	function (isOkay, list) {
@@ -6989,9 +7136,121 @@ var $author$project$Page$Graph$update = F2(
 				return A3($author$project$Page$Graph$handleWindowResized, width, height, model);
 		}
 	});
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$List$tail = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(xs);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm_community$list_extra$List$Extra$init = function (items) {
+	if (!items.b) {
+		return $elm$core$Maybe$Nothing;
+	} else {
+		var nonEmptyList = items;
+		return A2(
+			$elm$core$Maybe$map,
+			$elm$core$List$reverse,
+			$elm$core$List$tail(
+				$elm$core$List$reverse(nonEmptyList)));
+	}
+};
+var $elm$core$Tuple$mapFirst = F2(
+	function (func, _v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return _Utils_Tuple2(
+			func(x),
+			y);
+	});
+var $elm$core$Tuple$mapSecond = F2(
+	function (func, _v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return _Utils_Tuple2(
+			x,
+			func(y));
+	});
+var $author$project$Page$Snake$moveSnake = F2(
+	function (tickDelta, model) {
+		var boardSize = model.boardSize;
+		var snakeCoords = model.snakeCoords;
+		var moveDir = model.moveDir;
+		var moveDelta = model.moveDelta;
+		var newMoveDelta = moveDelta + $elm$core$Basics$floor(tickDelta);
+		var _v0 = snakeCoords;
+		var head = _v0.head;
+		var tail = _v0.tail;
+		var newHead = function () {
+			switch (moveDir.$) {
+				case 'N':
+					return A2(
+						$elm$core$Tuple$mapFirst,
+						function (y) {
+							return y - 1;
+						},
+						head);
+				case 'S':
+					return A2(
+						$elm$core$Tuple$mapFirst,
+						function (y) {
+							return y + 1;
+						},
+						head);
+				case 'E':
+					return A2(
+						$elm$core$Tuple$mapSecond,
+						function (x) {
+							return x + 1;
+						},
+						head);
+				default:
+					return A2(
+						$elm$core$Tuple$mapSecond,
+						function (x) {
+							return x - 1;
+						},
+						head);
+			}
+		}();
+		var newTail = A2(
+			$elm$core$List$cons,
+			head,
+			A2(
+				$elm$core$Maybe$withDefault,
+				_List_Nil,
+				$elm_community$list_extra$List$Extra$init(tail)));
+		return (newMoveDelta > 500) ? _Utils_update(
+			model,
+			{
+				grid: A2(
+					$author$project$Page$Snake$buildGrid,
+					boardSize,
+					{head: newHead, tail: newTail}),
+				moveDelta: 0,
+				snakeCoords: {head: newHead, tail: newTail}
+			}) : _Utils_update(
+			model,
+			{moveDelta: newMoveDelta});
+	});
 var $author$project$Page$Snake$update = F2(
 	function (msg, model) {
-		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		var delta = msg.a;
+		return _Utils_Tuple2(
+			A2($author$project$Page$Snake$moveSnake, delta, model),
+			$elm$core$Platform$Cmd$none);
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -7471,32 +7730,6 @@ var $mdgriffith$elm_ui$Internal$Model$formatBoxShadow = function (shadow) {
 					$mdgriffith$elm_ui$Internal$Model$formatColor(shadow.color))
 				])));
 };
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$core$Tuple$mapFirst = F2(
-	function (func, _v0) {
-		var x = _v0.a;
-		var y = _v0.b;
-		return _Utils_Tuple2(
-			func(x),
-			y);
-	});
-var $elm$core$Tuple$mapSecond = F2(
-	function (func, _v0) {
-		var x = _v0.a;
-		var y = _v0.b;
-		return _Utils_Tuple2(
-			x,
-			func(y));
-	});
 var $mdgriffith$elm_ui$Internal$Model$renderFocusStyle = function (focus) {
 	return _List_fromArray(
 		[
@@ -14040,16 +14273,7 @@ var $author$project$Main$view = function (model) {
 	};
 };
 var $author$project$Main$main = $elm$browser$Browser$application(
-	{
-		init: $author$project$Main$init,
-		onUrlChange: $author$project$Main$UrlChanged,
-		onUrlRequest: $author$project$Main$LinkClicked,
-		subscriptions: function (_v0) {
-			return $elm$core$Platform$Sub$none;
-		},
-		update: $author$project$Main$update,
-		view: $author$project$Main$view
-	});
+	{init: $author$project$Main$init, onUrlChange: $author$project$Main$UrlChanged, onUrlRequest: $author$project$Main$LinkClicked, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	A2(
 		$elm$json$Json$Decode$andThen,

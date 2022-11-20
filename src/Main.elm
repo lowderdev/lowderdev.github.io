@@ -22,7 +22,7 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         , onUrlRequest = LinkClicked
         , onUrlChange = UrlChanged
         }
@@ -63,9 +63,6 @@ type alias Flags =
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url navKey =
     let
-        aurl =
-            Debug.log (Url.toString url)
-
         model =
             { route = Route.parseUrl url
             , page = NotFoundPage
@@ -162,6 +159,20 @@ homeView =
         , link [ paddingXY 20 0 ] { url = "/graph", label = el [ Font.underline ] (text "Graph") }
         , link [ paddingXY 20 0 ] { url = "/snake", label = el [ Font.underline ] (text "Snake") }
         ]
+
+
+
+-- Subs
+
+
+subscriptions : Model -> Sub Msg
+subscriptions { page } =
+    case page of
+        SnakePage pageModel ->
+            Sub.map SnakeMsg (Snake.subscriptions pageModel)
+
+        _ ->
+            Sub.none
 
 
 

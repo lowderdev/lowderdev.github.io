@@ -1,12 +1,13 @@
-module Page.Snake exposing (Model, Msg, init, update, view)
+module Page.Snake exposing (Model, Msg, init, subscriptions, update, view)
 
+import Browser.Events
 import Dict exposing (Dict)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Html.Attributes
-import List.Extra exposing (cartesianProduct, groupsOf, lift2)
-import Page.Colors exposing (darkBlue, lightBlue)
+import List.Extra
+import Page.Colors as Colors
 import Page.GameBoard exposing (Coords, Shape(..))
 
 
@@ -15,7 +16,13 @@ import Page.GameBoard exposing (Coords, Shape(..))
 
 
 type alias Model =
-    { boardSize : Int, grid : Grid, snakeCoords : SnakeCoords, gameOver : Bool }
+    { boardSize : Int
+    , grid : Grid
+    , snakeCoords : SnakeCoords
+    , moveDir : MoveDir
+    , moveDelta : Int
+    , gameOver : Bool
+    }
 
 
 type alias Grid =
@@ -36,8 +43,19 @@ type alias SnakeCoords =
     { head : Coords, tail : List Coords }
 
 
+type MoveDir
+    = N
+    | S
+    | E
+    | W
+
+
 type alias Flags =
     { number : Int, windowWidth : Int, windowHeight : Int }
+
+
+
+-- Init
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -45,6 +63,33 @@ init _ =
     let
         boardSize =
             5
+
+        mid =
+            boardSize // 2
+
+        startingSnakeCoords =
+            { head = ( mid, mid ), tail = [ ( mid, mid - 1 ), ( mid, mid - 2 ) ] }
+
+        gridWithSnake =
+            buildGrid boardSize startingSnakeCoords
+    in
+    ( { boardSize = boardSize
+      , grid = gridWithSnake
+      , snakeCoords = startingSnakeCoords
+      , moveDir = E
+      , moveDelta = 0
+      , gameOver = False
+      }
+    , Cmd.none
+    )
+
+
+buildGrid : Int -> SnakeCoords -> Grid
+buildGrid boardSize snakeCoords =
+    let
+        snakePoints : List Coords
+        snakePoints =
+            snakeCoords.head :: snakeCoords.tail
 
         coordList =
             List.range 0 (boardSize - 1)
@@ -55,29 +100,22 @@ init _ =
                 |> List.map (\coord -> ( coord, Empty ))
                 |> Dict.fromList
 
-        mid =
-            boardSize // 2
-
-        startingSnakeCoords =
-            { head = ( mid, mid ), tail = [ ( mid, mid - 1 ), ( mid, mid - 2 ) ] }
-
-        snakePoints : List Coords
-        snakePoints =
-            startingSnakeCoords.head :: startingSnakeCoords.tail
-
         gridWithSnake =
             List.foldl
                 (\coord newGrid -> Dict.insert coord Snake newGrid)
                 emptyGrid
                 snakePoints
     in
-    ( { boardSize = boardSize
-      , grid = gridWithSnake
-      , snakeCoords = startingSnakeCoords
-      , gameOver = False
-      }
-    , Cmd.none
-    )
+    gridWithSnake
+
+
+
+-- Subs
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Browser.Events.onAnimationFrameDelta Tick
 
 
 
@@ -85,14 +123,51 @@ init _ =
 
 
 type Msg
-    = Noop
+    = Tick Float
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Noop ->
-            ( model, Cmd.none )
+        Tick delta ->
+            ( moveSnake delta model, Cmd.none )
+
+
+moveSnake : Float -> Model -> Model
+moveSnake tickDelta ({ boardSize, snakeCoords, moveDir, moveDelta } as model) =
+    let
+        newMoveDelta =
+            moveDelta + floor tickDelta
+
+        { head, tail } =
+            snakeCoords
+
+        newHead =
+            case moveDir of
+                N ->
+                    Tuple.mapFirst (\y -> y - 1) head
+
+                S ->
+                    Tuple.mapFirst (\y -> y + 1) head
+
+                E ->
+                    Tuple.mapSecond (\x -> x + 1) head
+
+                W ->
+                    Tuple.mapSecond (\x -> x - 1) head
+
+        newTail =
+            head :: Maybe.withDefault [] (List.Extra.init tail)
+    in
+    if newMoveDelta > 500 then
+        { model
+            | grid = buildGrid boardSize { head = newHead, tail = newTail }
+            , snakeCoords = { head = newHead, tail = newTail }
+            , moveDelta = 0
+        }
+
+    else
+        { model | moveDelta = newMoveDelta }
 
 
 
@@ -103,7 +178,7 @@ view : Model -> Element Msg
 view { boardSize, grid } =
     let
         rows =
-            groupsOf boardSize (Dict.values grid)
+            List.Extra.groupsOf boardSize (Dict.values grid)
     in
     column
         [ centerX
@@ -125,9 +200,9 @@ viewCell cell =
         , width (px 80)
         , height (px 80)
         , Border.width 1
-        , Border.color darkBlue
+        , Border.color Colors.darkBlue
         , Border.rounded 2
-        , Background.color lightBlue
+        , Background.color Colors.lightBlue
         , htmlAttribute (Html.Attributes.style "touch-action" "manipulation")
         ]
         (case cell of
