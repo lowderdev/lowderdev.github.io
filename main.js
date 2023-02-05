@@ -6341,7 +6341,7 @@ var $elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
 	});
-var $author$project$Page$Snake$cartesian = F2(
+var $author$project$Page$Snake$cartesianProduct = F2(
 	function (xs, ys) {
 		return A3($elm_community$list_extra$List$Extra$lift2, $elm$core$Tuple$pair, xs, ys);
 	});
@@ -6367,7 +6367,7 @@ var $author$project$Page$Snake$buildGrid = F2(
 				function (coord) {
 					return _Utils_Tuple2(coord, $author$project$Page$Snake$Empty);
 				},
-				A2($author$project$Page$Snake$cartesian, coordList, coordList)));
+				A2($author$project$Page$Snake$cartesianProduct, coordList, coordList)));
 		var gridWithSnake = A3(
 			$elm$core$List$foldl,
 			F2(

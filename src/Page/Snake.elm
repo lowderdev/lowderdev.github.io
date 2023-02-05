@@ -74,40 +74,54 @@ init { number } =
         mid =
             boardSize // 2
 
+        seed0 =
+            Random.initialSeed number
+
         startingSnakeCoords =
             { head = ( mid, mid ), tail = [ ( mid, mid - 1 ), ( mid, mid - 2 ) ] }
 
-        gridWithSnake =
-            buildGrid boardSize startingSnakeCoords
-
-        seed =
-            Random.initialSeed number
+        ( gridWithEntities, seed1 ) =
+            buildGrid boardSize startingSnakeCoords seed0
     in
     ( { boardSize = boardSize
-      , grid = gridWithSnake
+      , grid = gridWithEntities
       , snakeCoords = startingSnakeCoords
       , moveDir = Right
       , moveDelta = 0
       , gameOver = False
-      , seed = seed
+      , seed = seed1
       }
     , Cmd.none
     )
 
 
-buildGrid : Int -> SnakeCoords -> Grid
-buildGrid boardSize snakeCoords =
+buildGrid : Int -> SnakeCoords -> Random.Seed -> ( Grid, Random.Seed )
+buildGrid boardSize snakeCoords seed0 =
     let
-        snakePoints : List Coords
         snakePoints =
             snakeCoords.head :: snakeCoords.tail
 
-        coordList =
+        coordRange =
             List.range 0 (boardSize - 1)
+
+        coordList =
+            cartesianProduct coordRange coordRange
+
+        emptyCellCoords =
+            List.filter
+                (\coord -> not (List.member coord snakePoints))
+                coordList
+
+        foodCoord =
+            emptyCellCoords
+            |> \list -> (List.length list) - 1
+            |> \maxIndex -> (Random.step (Random.int 0 maxIndex) seed0)
+            |> \(i, seed1) -> 
+
 
         emptyGrid : Dict Coords Cell
         emptyGrid =
-            cartesian coordList coordList
+            coordList
                 |> List.map (\coord -> ( coord, Empty ))
                 |> Dict.fromList
 
@@ -117,7 +131,7 @@ buildGrid boardSize snakeCoords =
                 emptyGrid
                 snakePoints
     in
-    gridWithSnake
+    ( gridWithSnake, seed0 )
 
 
 
@@ -260,8 +274,8 @@ viewCell cell =
         none
 
 
-cartesian : List a -> List b -> List ( a, b )
-cartesian xs ys =
+cartesianProduct : List a -> List b -> List ( a, b )
+cartesianProduct xs ys =
     List.Extra.lift2 Tuple.pair xs ys
 
 
